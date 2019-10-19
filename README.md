@@ -49,6 +49,13 @@ http://cocodataset.org/#home
 This dataset offers 17125 images, from which all of them have annotations that describe what objects are on the picture and exact xmin, xmax, ymin, ymax coordinates where they begin and end. For classification there is 20 classes which focus on animals, vehicles, indoor objects and people.<br />
 http://host.robots.ox.ac.uk/pascal/VOC/voc2012/index.html
 
+## Solution Proposal
+We would like to try method similar to YOLO algorithm, where we divide input image into a grid and predict multiple
+bounding box coordinates relative to grid cell, because this approach should not take too long to train. We may 
+experiment with different grid sizes and bounding box counts as their optimal value might be dependant on sizes and count 
+of objects in images. 
+
+
 ## References
 [1] Girshick, R., Donahue, J., Darrell, T. and Malik, J., 2014. Rich feature hierarchies for accurate object detection and semantic segmentation. In Proceedings of the IEEE conference on computer vision and pattern recognition (pp. 580-587).
 
