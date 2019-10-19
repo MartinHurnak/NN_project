@@ -25,10 +25,17 @@ RoI pooling layer which makes whole network trainable during single stage. It al
 classification instead of SVM [3].
 
 _Faster R-CNN_ further improves object detection process by replacing selective search with _Region Proposal Network_ (RPN)
-that proposes regions from feature map. **TODO** [4]
+that proposes regions from feature map. It serves as an 'attention' of network. Regions are then RoI pooled and classified
+ as in Fast R-CNN. RPN can share convolutional layers with detection network (e.g. Fast R-CNN) [4]. This model is much 
+ faster than original R-CNN, although it is still not enough fast if we want to detect objects in real-time 
+ (e.g. in a video)
 
-_YOLO_ (You Only Look Once) 
-**TODO**
+_You Only Look Once_ (YOLO) is extremely fast approach for object detection. Detection is reframed as a single regression
+problem where bounding box coordinates and class probabilities are predicted straight from image pixels. Image is divided into 
+_S x S_ grid, where each grid cell predicts _B_ bounding boxes and their confidence scores. Grid cell is responsible for 
+detecting an object if its center falls into that grid cell. Non-max supression is then used to discard duplicate 
+detections. YOLO  reasons globally about the image and is much better at generalizing in comparison to R-CNN methods [5].
+
 
 
 
@@ -40,3 +47,5 @@ _YOLO_ (You Only Look Once)
 [3] Girshick, R., 2015. Fast r-cnn. In Proceedings of the IEEE international conference on computer vision (pp. 1440-1448).
 
 [4] Ren, S., He, K., Girshick, R. and Sun, J., 2015. Faster r-cnn: Towards real-time object detection with region proposal networks. In Advances in neural information processing systems (pp. 91-99).
+
+[5] Redmon, J., Divvala, S., Girshick, R. and Farhadi, A., 2016. You only look once: Unified, real-time object detection. In Proceedings of the IEEE conference on computer vision and pattern recognition (pp. 779-788).
