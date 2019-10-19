@@ -1,6 +1,8 @@
 # Object Detection
-
 Authors: Bc. Martin Hurňák, Bc. Kamil Mucha
+
+## Motivation
+**TODO**
 
 ## Related Work
 If we aim to detect only one object, it can be formed as regression problem - our goal is to find foursome `(x, y, w, h)`,
@@ -38,8 +40,14 @@ detections. YOLO  reasons globally about the image and is much better at general
 However, detecting each of multiple smaller objects in a group (e.g. flock of birds or crowd of people in a distance) is a 
 problem for YOLO as we can get only limited number of bounding box predictions per grid cell.
 
+## Datasets
+#### COCO, Common Objects in Context
+This dataset offers images for object detection/segmentation training, validation and testing. For training there is 118K images available with captions of what is happening on the image and detection, classification and segmentation of the object on the image. For Validation there is 5K images available and 41K for testing. For classification there is 80 different classes ranging from toothbrushes, apples and oranges up to trains and boats.<br />
+http://cocodataset.org/#home
 
-
+#### VOC2012, Visual Object Classes Challenge 2012
+This dataset offers 17125 images, from which all of them have annotations that describe what objects are on the picture and exact xmin, xmax, ymin, ymax coordinates where they begin and end. For classification there is 20 classes which focus on animals, vehicles, indoor objects and people.<br />
+http://host.robots.ox.ac.uk/pascal/VOC/voc2012/index.html
 
 ## References
 [1] Girshick, R., Donahue, J., Darrell, T. and Malik, J., 2014. Rich feature hierarchies for accurate object detection and semantic segmentation. In Proceedings of the IEEE conference on computer vision and pattern recognition (pp. 580-587).
