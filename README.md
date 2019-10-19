@@ -2,13 +2,17 @@
 Authors: Bc. Martin Hurňák, Bc. Kamil Mucha
 
 ## Motivation
-**TODO**
+We decided to solve object detection task for this assignment. This task combines finding the bounding box of an object
+and labelling it with correct class. This is useful in situations, in which we do not only need to know, what objects are
+on an image, but also where are they (e.g. self-driving car needs to know locations of surrounding cars and pedestrians 
+based on video input from camera). If we want to perform object detection in the real-time, selected algorithm also has to be fast 
+enough to process frames as they come from camera.
 
 ## Related Work
 If we aim to detect only one object, it can be formed as regression problem - our goal is to find foursome `(x, y, w, h)`,
- where `(x, y)` is position of bounding box, `w` is width and `h` is height of bounding box. However, there can be more
- occurrences of object of interest in a picture, so we cannot solve this problem by simply combining convolutional and
- fully-connected layers as the length of output is variable. We need to find different regions of interest in an image
+ where `(x, y)` is position of bounding box, `w` is width and `h` is height of bounding box and label it with appropriate class.
+  However, there can be more occurrences of object of interest in a picture, so we cannot solve this as simple 
+  classification + regression problem as the length of output is variable. We need to find different regions of interest in an image
  and use CNN to classify this regions.
 
 One of possible approaches for this task is called _Regions with CNN features_ or R-CNN. Selective search is used to
