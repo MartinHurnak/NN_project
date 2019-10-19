@@ -35,6 +35,8 @@ problem where bounding box coordinates and class probabilities are predicted str
 _S x S_ grid, where each grid cell predicts _B_ bounding boxes and their confidence scores. Grid cell is responsible for 
 detecting an object if its center falls into that grid cell. Non-max supression is then used to discard duplicate 
 detections. YOLO  reasons globally about the image and is much better at generalizing in comparison to R-CNN methods [5].
+However, detecting each of multiple smaller objects in a group (e.g. flock of birds or crowd of people in a distance) is a 
+problem for YOLO as we can get only limited number of bounding box predictions per grid cell.
 
 
 
