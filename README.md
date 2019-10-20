@@ -2,11 +2,13 @@
 Authors: Bc. Martin Hurňák, Bc. Kamil Mucha
 
 ## Motivation
-We decided to solve object detection task for this assignment. This task combines finding the bounding box of an object
-and labelling it with correct class. This is useful in situations, in which we do not only need to know, what objects are
-on an image, but also where are they (e.g. self-driving car needs to know locations of surrounding cars and pedestrians 
-based on video input from camera). If we want to perform object detection in the real-time, selected algorithm also has to be fast 
-enough to process frames as they come from camera.
+Object detection is a main challenge of computer vision field. Thanks to the recent advancement in deep learning, we are able to train object detection applications, but they still require large datasets to achieve high levels of accuracy.
+
+Object detection includes detection of individual objects on image, labeling them with correct class and creating a bounding box around them. Bounding box includes coordinates of the center of the object and height and width. We could also choose a different, more difficult approach to this, and go with segmentation. With segmentation we need to define exactly which pixels belong to the specific object. Since we are able to process images this way, we can also apply object detection on videos. With enough computing power and optimal algorithm we can even make it work in real time.
+
+Object detection can be applied in many different fields. For example, tracking specific objects in the environment, video surveillance, pedestrian detection, anomaly detection, counting people and their movement and face detection.
+
+
 
 ## Related Work
 If we aim to detect only one object, it can be formed as regression problem - our goal is to find foursome `(x, y, w, h)`,
