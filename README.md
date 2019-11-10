@@ -1,13 +1,13 @@
-Pull docker image:
-
-```
-docker pull mataur/nsiete_fiit
-```
-
 Clone this repo:
 
 ```
 git clone https://github.com/MartinHurnak/NN_project.git
+```
+
+Pull docker image:
+
+```
+docker pull mataur/nsiete_fiit
 ```
 
 Run docker image:
