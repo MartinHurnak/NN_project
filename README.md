@@ -14,5 +14,5 @@ Run docker image:
 
 ```
 cd <path_to_this_repo>
-docker run -it mataur/nsiete_fiit
+docker run -p 8888:8888 -it mataur/nsiete_fiit
 ```
