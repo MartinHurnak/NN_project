@@ -1,17 +1,20 @@
-#### Clone this repo:
+### Clone this repo:
 
 ```
 git clone https://github.com/MartinHurnak/NN_project.git
 ```
 
-#### Pull docker image:
 
+### Pull & run Docker image:
 ```
-docker pull mataur/nsiete_fiit
+cd <path_to_this_repo>
+```
+##### on Windows:
+```
+run_docker.bat
 ```
 
-#### Run docker image:
-
+##### on UNIX:
 ```
-docker run -p 8888:8888 -v <path_to_this_repo>:/NN_project -it mataur/nsiete_fiit
+sh run_docker.sh
 ```
