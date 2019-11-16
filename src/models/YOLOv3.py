@@ -1,6 +1,8 @@
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras.layers import Conv2D, add, Activation, GlobalAveragePooling2D, Dense, concatenate
+from tensorflow.keras.layers import Conv2D, add, Activation, GlobalAveragePooling2D, Dense, concatenate, RepeatVector, \
+    LSTM
+from config import SEQUENCE_LENGTH
 
 
 class YoloLayer(keras.layers.Layer):
@@ -21,16 +23,21 @@ class YoloLayer(keras.layers.Layer):
 class OutputLayer(keras.layers.Layer):
     def __init__(self, num_classes):
         super(OutputLayer, self).__init__()
-        self.bb = Dense(4, activation='sigmoid', name='bb_output')
+        self.lstm = LSTM(1024, return_sequences=True)
+
+        self.bb_coord = Dense(2, activation='sigmoid', name='bb_coord')
+        self.bb_size = Dense(2, activation='sigmoid', name='bb_size')
         self.has_object = Dense(1, activation='sigmoid', name='is_object_output')
         self.classes = Dense(num_classes, activation='softmax', name='class_output')
 
     def call(self, x):
-        bb = self.bb(x)
+        x = self.lstm(x)
+        bb_coord = self.bb_coord(x)
+        bb_size = self.bb_size(x)
         has_object = self.has_object(x)
         classes = self.classes(x)
 
-        return [classes, has_object, bb]
+        return [classes, has_object, bb_coord, bb_size]
 
 
 class YOLOv3(keras.Model):
@@ -46,7 +53,7 @@ class YOLOv3(keras.Model):
             YoloLayer(32, 64),
             Conv2D(128, (3, 3), strides=2, padding='same'),
         ]
-        self.model_layers += [YoloLayer(64, 128)]   *2
+        self.model_layers += [YoloLayer(64, 128)] * 2
         self.model_layers.append(Conv2D(256, (3, 3), strides=2, padding='same'))
         self.model_layers += [YoloLayer(128, 256)]  # *8
         self.model_layers.append(Conv2D(512, (3, 3), strides=2, padding='same'))
@@ -55,7 +62,8 @@ class YOLOv3(keras.Model):
         self.model_layers += [YoloLayer(512, 1024)]  # *4
         self.model_layers += [
             GlobalAveragePooling2D(),
-            Dense(1000),
+            # Dense(1000),
+            RepeatVector(SEQUENCE_LENGTH),
             OutputLayer(num_classes)
         ]
 
