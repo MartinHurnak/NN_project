@@ -38,7 +38,7 @@ def preprocess(data):
 
     for col in ['class', 'is_object', 'bb_coords', 'bb_sizes']:
         data[col] = data['object'].apply(lambda X: [[x[col] for x in X]])
-    for col in ['class', 'is_object']:
+    for col in ['class']:
         data[col] = data[col].apply(lambda x: np.vstack(x))
     for col in ['class', 'is_object', 'bb_coords', 'bb_sizes']:
         data[col] = data[col].apply(lambda x: pad_sequences(x, SEQUENCE_LENGTH, dtype='float32', padding='post')[0])

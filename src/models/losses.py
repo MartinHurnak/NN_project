@@ -1,7 +1,13 @@
-from tensorflow.keras.losses import Loss
+from tensorflow.keras.losses import Loss, BinaryCrossentropy
 from tensorflow.python import ops
 from tensorflow.python.ops import math_ops
 from tensorflow.keras import backend as K
+
+class IsObjectLoss(Loss):
+    def call(self, y_true, y_pred):
+        loss = K.square(y_true - y_pred)
+        coef = (K.cast(K.equal(y_true, K.zeros_like(y_true)), K.floatx()) + 1) /2
+        return K.sum(coef*loss, axis=-1)
 
 
 class SumSquaredError(Loss):
