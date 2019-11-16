@@ -1,4 +1,7 @@
 from tensorflow import keras
 
-CONV_ACTIVATION = keras.layers.LeakyReLU()
-SEQUENCE_LENGTH = 4
+BATCH_SIZE=2
+CONV_BASE_SIZE = 4
+CONV_ACTIVATION = keras.layers.LeakyReLU(0.1)
+LSTM_SIZE = 16*CONV_BASE_SIZE
+SEQUENCE_LENGTH = 1
