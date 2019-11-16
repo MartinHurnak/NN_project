@@ -1,8 +1,8 @@
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.layers import Conv2D, add, Activation, GlobalAveragePooling2D, Dense, concatenate, RepeatVector, \
-    LSTM
-from config import SEQUENCE_LENGTH
+    LSTM, Bidirectional
+from config import SEQUENCE_LENGTH, CONV_ACTIVATION
 
 
 class YoloLayer(keras.layers.Layer):
@@ -23,7 +23,7 @@ class YoloLayer(keras.layers.Layer):
 class OutputLayer(keras.layers.Layer):
     def __init__(self, num_classes):
         super(OutputLayer, self).__init__()
-        self.lstm = LSTM(1024, return_sequences=True)
+        self.lstm = Bidirectional(LSTM(1024, return_sequences=True))
 
         self.bb_coord = Dense(2, activation='sigmoid', name='bb_coord')
         self.bb_size = Dense(2, activation='sigmoid', name='bb_size')
@@ -48,18 +48,18 @@ class YOLOv3(keras.Model):
     def __init__(self, num_classes):
         super(YOLOv3, self).__init__()
         self.model_layers = [
-            Conv2D(32, (3, 3), padding='same'),
-            Conv2D(64, (3, 3), strides=2, padding='same'),
-            YoloLayer(32, 64),
-            Conv2D(128, (3, 3), strides=2, padding='same'),
+            Conv2D(32, (3, 3), padding='same', activation=CONV_ACTIVATION),
+            Conv2D(64, (3, 3), strides=2, padding='same', activation=CONV_ACTIVATION),
+            YoloLayer(32, 64, activation=CONV_ACTIVATION),
+            Conv2D(128, (3, 3), strides=2, padding='same', activation=CONV_ACTIVATION),
         ]
-        self.model_layers += [YoloLayer(64, 128)] * 2
-        self.model_layers.append(Conv2D(256, (3, 3), strides=2, padding='same'))
-        self.model_layers += [YoloLayer(128, 256)]  # *8
-        self.model_layers.append(Conv2D(512, (3, 3), strides=2, padding='same'))
-        self.model_layers += [YoloLayer(256, 512)]  # *8
-        self.model_layers.append(Conv2D(1024, (3, 3), strides=2, padding='same'))
-        self.model_layers += [YoloLayer(512, 1024)]  # *4
+        self.model_layers += [YoloLayer(64, 128, activation=CONV_ACTIVATION)] * 2
+        self.model_layers.append(Conv2D(256, (3, 3), strides=2, padding='same', activation=CONV_ACTIVATION))
+        self.model_layers += [YoloLayer(128, 256, activation=CONV_ACTIVATION)]  # *8
+        self.model_layers.append(Conv2D(512, (3, 3), strides=2, padding='same', activation=CONV_ACTIVATION))
+        self.model_layers += [YoloLayer(256, 512, activation=CONV_ACTIVATION)]  # *8
+        self.model_layers.append(Conv2D(1024, (3, 3), strides=2, padding='same', activation=CONV_ACTIVATION))
+        self.model_layers += [YoloLayer(512, 1024, activation=CONV_ACTIVATION)]  # *4
         self.model_layers += [
             GlobalAveragePooling2D(),
             # Dense(1000),
