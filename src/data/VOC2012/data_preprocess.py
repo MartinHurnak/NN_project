@@ -19,13 +19,12 @@ def _preprocess_objects_dict(d, img_width, img_height):
 
     cls = class_encoder.transform([cls])
 
-    return {"class": cls, "is_object": [1], "bb_coords": np.array([xmin, ymin]), "bb_sizes": np.array([width, height])}
+    return {"class": cls, "is_object": [1], "bb_coords": np.array([xmin, ymin]), "bb_sizes": np.array([width, height]), 'bb_area': width*height}
 
 
 def _preprocess_objects_list(l, img_width, img_height):
     class_encoder.fit(classes)
-    return [_preprocess_objects_dict(d, img_width, img_height) for d in l][
-           0:max(len(l), 10)]  # TODO change to multiple outputs later
+    return [_preprocess_objects_dict(d, img_width, img_height) for d in l]
 
 
 # return [_preprocess_objects_dict(l[0], img_width, img_height)]
@@ -37,16 +36,28 @@ def preprocess(data):
     data['object'] = data.apply(
         lambda x: _preprocess_objects_list(x['object'], x['width'], x['height']), axis=1)
 
-    for col in ['class', 'is_object', 'bb_coords', 'bb_sizes']:
+    for col in ['class', 'is_object', 'bb_coords', 'bb_sizes', 'bb_area']:
         data[col] = data['object'].apply(lambda X: [[x[col] for x in X]])
-    for col in ['class', 'is_object']:
-        data[col] = data[col].apply(lambda x: np.vstack(x))
 
-    data['concatenated'] = data['object'].apply(lambda X: [[x[col] for col in ['class', 'is_object', 'bb_coords', 'bb_sizes']] for x in X] )
-    data['concatenated'] = data['concatenated'].apply(lambda X: [np.concatenate(x, axis=0)for x in X])
-    for col in ['class', 'is_object', 'bb_coords', 'bb_sizes']:
-        data[col] = data[col].apply(lambda x: pad_sequences(x, SEQUENCE_LENGTH, dtype='float32', padding='post')[0])
 
+    #for col in ['class', 'is_object', 'bb_coords', 'bb_sizes']:
+   #     data[col] = data[col].apply(lambda x: pad_sequences(x, SEQUENCE_LENGTH, dtype='float32', padding='post'))
+        #data[col] = data[col].apply(lambda X: [pad_sequences([x], SEQUENCE_LENGTH, dtype='float32', padding='post')for x in X])
+
+
+    data['bb_index'] = data['bb_area'].apply(lambda x: np.argmax(x))
+
+    for col in ['class', 'is_object', 'bb_coords', 'bb_sizes', 'bb_area']:
+        data[col] = data.apply(lambda row: [row[col][0][row['bb_index']]],axis=1)
+
+    # for col in ['class', 'is_object']:
+    #     data[col] = data[col].apply(np.vstack)
+    #
+    for col in  ['bb_coords', 'bb_sizes', 'bb_area']:
+        data[col] = data[col].apply(np.hstack)
+        data[col] = data[col].apply(lambda X: [[x] for x in X])
+    #for col in ['class','is_object', 'bb_coords', 'bb_sizes']:
+    #    data[col] = data.apply(lambda row: np.asarray([row[col], row['is_object']]), axis=1)
     return data
 
 

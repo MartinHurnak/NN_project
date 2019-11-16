@@ -5,7 +5,7 @@ def datagen_flow(data):
     return datagen.flow_from_dataframe(data,
                                 directory='../data/raw/VOC2012/JPEGImages',
                                 x_col='filename',
-                                y_col=['is_object', 'bb_coords', 'bb_sizes', 'class'],
+                                y_col=['bb_coords', 'bb_sizes', 'class'],
                                 target_size=(256, 256),
                                 rescale = 1.0/255,
                                 class_mode='multi_output',

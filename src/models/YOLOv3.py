@@ -3,7 +3,7 @@ from tensorflow import keras
 from tensorflow.keras.layers import Conv2D, add, Activation, GlobalAveragePooling2D, Dense, concatenate, RepeatVector, \
     LSTM, Bidirectional
 from config import SEQUENCE_LENGTH, CONV_ACTIVATION, CONV_BASE_SIZE, LSTM_SIZE
-
+from src.models import losses
 
 class YoloLayer(keras.layers.Layer):
     def __init__(self, filters_1, filters_2, activation='relu'):
@@ -89,19 +89,25 @@ def create_model(num_classes):
     model_layers += [YoloLayer(16*CONV_BASE_SIZE, 32*CONV_BASE_SIZE, activation=CONV_ACTIVATION)]   *4
     model_layers += [
         GlobalAveragePooling2D(),
-        # Dense(1000),
-        RepeatVector(SEQUENCE_LENGTH),
-        Bidirectional(LSTM(LSTM_SIZE, return_sequences=True))
+        Dense(128),
+        #RepeatVector(SEQUENCE_LENGTH),
+        #Bidirectional(LSTM(LSTM_SIZE, return_sequences=True))
     ]
 
-    has_object_true = keras.layers.Input(shape=(SEQUENCE_LENGTH,1,))
+   # has_object_true = keras.Input(shape=(SEQUENCE_LENGTH,1), name='has_object_true')
+
    # outputs = OutputLayer(num_classes)
     x = input
     for layer in model_layers:
         x = layer(x)
     bb_coord = Dense(2, activation='sigmoid', name='bb_coord')(x)
     bb_size = Dense(2, activation='sigmoid', name='bb_size')(x)
-    has_object = Dense(1, activation='sigmoid', name='is_object_output')(x)
+    #has_object = Dense(1, activation='sigmoid', name='is_object_output')(x)
     classes = Dense(num_classes, activation='softmax', name='class_output')(x)
 
-    return keras.Model(inputs=input, outputs=[has_object, bb_coord, bb_size, classes]), has_object_true
+   # train_model =  keras.Model(inputs=[input, has_object_true], outputs=[has_object, bb_coord, bb_size, classes])
+    prediction_model =  keras.Model(inputs=input, outputs=[bb_coord, bb_size, classes])
+   # model.add_loss(losses.conditional_loss(has_object_true)(has_object_true, model.get_layer('is_object_output')))
+   # model.add_loss(losses.IsObjectLoss(has_object, model.get_layer('is_object_output')))
+
+    return prediction_model #train_model
