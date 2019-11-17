@@ -1,7 +1,8 @@
 from tensorflow import keras
 
-BATCH_SIZE=4
+BATCH_SIZE=32
 CONV_BASE_SIZE = 4
-CONV_ACTIVATION = keras.layers.LeakyReLU(0.1)
+CONV_ACTIVATION ='relu'# keras.layers.LeakyReLU(0.1)
 LSTM_SIZE = 16*CONV_BASE_SIZE
 SEQUENCE_LENGTH = 4
+VALIDATION_SPLIT=0.1
