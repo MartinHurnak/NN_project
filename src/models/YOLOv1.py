@@ -19,29 +19,29 @@ class YOLOv1Layer(keras.layers.Layer):
 def create_model_multi_bb(num_classes):
     input = keras.layers.Input(shape=(448, 448, 3,))
     model_layers = [
-        Conv2D(64, (7, 7),strides=2, padding='same', activation=CONV_ACTIVATION),
+        Conv2D(2*CONV_BASE_SIZE, (7, 7),strides=2, padding='same', activation=CONV_ACTIVATION),
         MaxPooling2D(padding='same'),
-        Conv2D(192, (3, 3), strides=2, padding='same', activation=CONV_ACTIVATION),
+        Conv2D(6*CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=CONV_ACTIVATION),
         MaxPooling2D(padding='same'),
-        YOLOv1Layer(128,256),
-        YOLOv1Layer(256, 512),
+        YOLOv1Layer(4*CONV_BASE_SIZE,8*CONV_BASE_SIZE),
+        YOLOv1Layer(8*CONV_BASE_SIZE, 16*CONV_BASE_SIZE),
         MaxPooling2D(padding='same'),
-        YOLOv1Layer(256, 512),
-        YOLOv1Layer(256, 512),
-        YOLOv1Layer(256, 512),
-        YOLOv1Layer(256, 512),
-        YOLOv1Layer(512, 1024),
+        YOLOv1Layer(8*CONV_BASE_SIZE, 16*CONV_BASE_SIZE),
+        YOLOv1Layer(8*CONV_BASE_SIZE, 16*CONV_BASE_SIZE),
+        YOLOv1Layer(8*CONV_BASE_SIZE, 16*CONV_BASE_SIZE),
+        YOLOv1Layer(8*CONV_BASE_SIZE, 16*CONV_BASE_SIZE),
+        YOLOv1Layer(16*CONV_BASE_SIZE, 32*CONV_BASE_SIZE),
         MaxPooling2D(padding='same'),
-        YOLOv1Layer(512, 1024),
-        YOLOv1Layer(512, 1024),
-        Conv2D(1024, (3, 3), padding='same', activation=CONV_ACTIVATION),
-        Conv2D(1024, (3, 3), strides=2, padding='same', activation=CONV_ACTIVATION),
-        Conv2D(1024, (3, 3), padding='same', activation=CONV_ACTIVATION),
-        Conv2D(1024, (3, 3), padding='same', activation=CONV_ACTIVATION),
+        YOLOv1Layer(16*CONV_BASE_SIZE,  32*CONV_BASE_SIZE),
+        YOLOv1Layer(16*CONV_BASE_SIZE,  32*CONV_BASE_SIZE),
+        Conv2D( 32*CONV_BASE_SIZE, (3, 3), padding='same', activation=CONV_ACTIVATION),
+        Conv2D( 32*CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=CONV_ACTIVATION),
+        Conv2D( 32*CONV_BASE_SIZE, (3, 3), padding='same', activation=CONV_ACTIVATION),
+        Conv2D( 32*CONV_BASE_SIZE, (3, 3), padding='same', activation=CONV_ACTIVATION),
     ]
     model_layers += [
         GlobalAveragePooling2D(),
-        Dense(4096),
+        Dense(128*CONV_BASE_SIZE),
         RepeatVector(SEQUENCE_LENGTH),
         LSTM(LSTM_SIZE, return_sequences=True)
     ]
@@ -49,7 +49,7 @@ def create_model_multi_bb(num_classes):
     x = input
     for layer in model_layers:
         x = layer(x)
-    bb_coord = Dense(2, activation='tanh', name='bb_coord')(x)
+    bb_coord = Dense(2, activation='sigmoid', name='bb_coord')(x)
     bb_size = Dense(2, activation='sigmoid', name='bb_size')(x)
     has_object = Dense(1, activation='sigmoid', name='is_object_output')(x)
     classes = Dense(num_classes, activation='softmax', name='class_output')(x)
