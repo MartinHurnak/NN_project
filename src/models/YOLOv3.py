@@ -24,8 +24,6 @@ class YoloLayer(keras.layers.Layer):
 class OutputLayer(keras.layers.Layer):
     def __init__(self, num_classes):
         super(OutputLayer, self).__init__()
-        self.lstm = Bidirectional(LSTM(1024, return_sequences=True))
-
         self.bb_coord = Dense(2, activation='sigmoid', name='bb_coord')
         self.bb_size = Dense(2, activation='sigmoid', name='bb_size')
         self.has_object = Dense(1, activation='sigmoid', name='is_object_output')
@@ -142,7 +140,7 @@ def create_model_multi_bb(num_classes):
     x = input
     for layer in model_layers:
         x = layer(x)
-    bb_coord = Dense(2, activation='tanh', name='bb_coord')(x)
+    bb_coord = Dense(2, activation='sigmoid', name='bb_coord')(x)
     bb_size = Dense(2, activation='sigmoid', name='bb_size')(x)
     has_object = Dense(1, activation='sigmoid', name='is_object_output')(x)
     classes = Dense(num_classes, activation='softmax', name='class_output')(x)

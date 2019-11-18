@@ -5,6 +5,8 @@ import os
 import numpy as np
 from tensorflow import keras
 from config import INPUT_SIZE
+from src.data.VOC2012.data import grid_columns
+
 class DataGen:
     def __init__(self):
         self.datagen = ImageDataGenerator(validation_split=VALIDATION_SPLIT)
@@ -43,12 +45,12 @@ class DataGenMultiOutput:
                                                 directory='data/raw/VOC2012/JPEGImages',
                                                 x_col='filename',
                                                 y_col=['output'],
-                                                #y_col=['bb_coords', 'bb_sizes', 'is_object', 'class'],
-                                               # weight_col='weights',
+                                                # y_col=['bb_coords', 'bb_sizes', 'is_object', 'class'],
+                                                # weight_col='weights',
                                                 target_size=INPUT_SIZE,
                                                 rescale=1.0 / 255,
                                                 class_mode='multi_output',
-                                                #class_mode='raw',
+                                                # class_mode='raw',
                                                 batch_size=BATCH_SIZE,
                                                 subset='training'
                                                 )
@@ -58,13 +60,49 @@ class DataGenMultiOutput:
                                                 directory='data/raw/VOC2012/JPEGImages',
                                                 x_col='filename',
                                                 y_col=['output'],
-                                               # y_col=['bb_coords', 'bb_sizes', 'is_object', 'class'],
-                                              #  weight_col='weights',
+                                                # y_col=['bb_coords', 'bb_sizes', 'is_object', 'class'],
+                                                #  weight_col='weights',
                                                 target_size=INPUT_SIZE,
                                                 rescale=1.0 / 255,
                                                 class_mode='multi_output',
-                                                #class_mode='raw',
+                                                # class_mode='raw',
                                                 batch_size=BATCH_SIZE,
+                                                subset='validation'
+                                                )
+
+
+class DataGenGrid:
+    def __init__(self, batch_size=BATCH_SIZE):
+        self.datagen = ImageDataGenerator(validation_split=VALIDATION_SPLIT)
+        self.batch_size = batch_size
+
+    def flow_train(self, data):
+        return self.datagen.flow_from_dataframe(data,
+                                                directory='data/raw/VOC2012/JPEGImages',
+                                                x_col='filename',
+                                                y_col=grid_columns,
+                                                # y_col=['bb_coords', 'bb_sizes', 'is_object', 'class'],
+                                                # weight_col='weights',
+                                                target_size=INPUT_SIZE,
+                                                rescale=1.0 / 255,
+                                                class_mode='multi_output',
+                                                # class_mode='raw',
+                                                batch_size=self.batch_size,
+                                                subset='training'
+                                                )
+
+    def flow_val(self, data):
+        return self.datagen.flow_from_dataframe(data,
+                                                directory='data/raw/VOC2012/JPEGImages',
+                                                x_col='filename',
+                                                y_col=grid_columns,
+                                                # y_col=['bb_coords', 'bb_sizes', 'is_object', 'class'],
+                                                #  weight_col='weights',
+                                                target_size=INPUT_SIZE,
+                                                rescale=1.0 / 255,
+                                                class_mode='multi_output',
+                                                # class_mode='raw',
+                                                batch_size=self.batch_size,
                                                 subset='validation'
                                                 )
 
@@ -101,7 +139,8 @@ class Generator(keras.utils.Sequence):
 
         return np.array([
             resize(imread(file_name), (200, 200))
-               for file_name in batch_x]), np.array(batch_y)
+            for file_name in batch_x]), np.array(batch_y)
+
 
 def generate_arrays_from_file(data, batch_size):
     while True:
@@ -111,7 +150,6 @@ def generate_arrays_from_file(data, batch_size):
         while batch_size <= len(indices):
             batch = indices[0:batch_size]
             for i in range(batch_size):
-
                 print(batch)
                 indices = indices[batch_size:]
                 inputs = np.array([get_input(row) for index, row in data.iloc[batch].iterrows()])

@@ -1,8 +1,8 @@
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.layers import Conv2D, add, Activation, GlobalAveragePooling2D, Dense, concatenate, RepeatVector, \
-    LSTM, Bidirectional, MaxPooling2D
-from config import SEQUENCE_LENGTH, CONV_ACTIVATION, CONV_BASE_SIZE, LSTM_SIZE, YOLO_LAYERS_COUNTS
+    LSTM, Bidirectional, MaxPooling2D, Concatenate
+from config import SEQUENCE_LENGTH, CONV_ACTIVATION, CONV_BASE_SIZE, LSTM_SIZE, YOLO_LAYERS_COUNTS, GRID_SIZE, GRID_CELL_BOXES
 
 class YOLOv1Layer(keras.layers.Layer):
     def __init__(self, filters_1, filters_2, activation='relu'):
@@ -42,19 +42,25 @@ def create_model_multi_bb(num_classes):
     model_layers += [
         GlobalAveragePooling2D(),
         Dense(128*CONV_BASE_SIZE),
-        RepeatVector(SEQUENCE_LENGTH),
-        LSTM(LSTM_SIZE, return_sequences=True)
+       # RepeatVector(SEQUENCE_LENGTH),
+        #LSTM(32, return_sequences=True)
     ]
 
     x = input
     for layer in model_layers:
         x = layer(x)
-    bb_coord = Dense(2, activation='sigmoid', name='bb_coord')(x)
-    bb_size = Dense(2, activation='sigmoid', name='bb_size')(x)
-    has_object = Dense(1, activation='sigmoid', name='is_object_output')(x)
-    classes = Dense(num_classes, activation='softmax', name='class_output')(x)
 
-    con = concatenate([bb_coord, bb_size, has_object, classes])
-    model = keras.Model(inputs=input, outputs=con)
+    concats = []
+    for i in range(GRID_SIZE[0]):
+        for j in range(GRID_SIZE[1]):
+            for b in range(GRID_CELL_BOXES):
+                bb_coord = Dense(2, activation='sigmoid', name='bb_coord_{}_{}_{}'.format(i,j,b))(x)
+                bb_size = Dense(2, activation='sigmoid', name='bb_size_{}_{}_{}'.format(i,j,b))(x)
+                has_object = Dense(1, activation='sigmoid', name='is_object_output_{}_{}_{}'.format(i,j,b))(x)
+                classes = Dense(num_classes, activation='softmax', name='class_output_{}_{}_{}'.format(i,j,b))(x)
+                concats.append(Concatenate(name='out_{}_{}_{}'.format(i,j,b))([bb_coord, bb_size, has_object, classes]))
+
+
+    model = keras.Model(inputs=input, outputs=concats)
 
     return model

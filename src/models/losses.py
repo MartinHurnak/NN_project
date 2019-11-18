@@ -1,23 +1,5 @@
 from tensorflow.keras.losses import Loss, BinaryCrossentropy, sparse_categorical_crossentropy, MSE, binary_crossentropy
-from tensorflow.python import ops
-from tensorflow.python.ops import math_ops
 from tensorflow.keras import backend as K
-import tensorflow as tf
-
-
-def sum_squared_sqrt_error(y_true, y_pred):
-    if not K.is_keras_tensor(y_pred):
-        y_pred = K.constant(y_pred)
-    y_true = K.cast(y_true, y_pred.dtype)
-    return K.sum(K.square(K.sqrt(y_true) - K.sqrt(y_pred)), axis=-1)
-
-
-def sum_squared_error(y_true, y_pred):
-    if not K.is_keras_tensor(y_pred):
-        y_pred = K.constant(y_pred)
-    y_true = K.cast(y_true, y_pred.dtype)
-    return K.sum(K.square(y_true - y_pred), axis=-1)
-
 
 class WholeOutputLoss(Loss):
     '''
@@ -50,8 +32,8 @@ class WholeOutputLoss(Loss):
         box_conf_loss = 0.5 * K.sum(K.abs(1 - true_box_conf) * K.square(true_box_conf - pred_box_conf)) + \
                         K.sum(true_box_conf * K.square(true_box_conf - pred_box_conf))
 
-        x_loss = K.sum(true_box_conf * K.square(true_box_x - pred_box_x))
-        y_loss = K.sum(true_box_conf * K.square(true_box_y - pred_box_y))
+        x_loss = K.sum(true_box_conf * K.square(true_box_x - pred_box_x) * K.sqrt(true_box_w))
+        y_loss = K.sum(true_box_conf * K.square(true_box_y - pred_box_y) * K.sqrt(true_box_h))
         box_pos_loss = 5 * (x_loss + y_loss)
         box_size_loss = 5 * K.sum(
             true_box_conf * K.sum(K.square(K.sqrt(true_box_sizes) - K.sqrt(pred_box_size)), axis=-1))
