@@ -1,0 +1,1 @@
+Experienced problems with weights becoming NaN at the beginning of training, solved by adding BatchNormalization after residual connections

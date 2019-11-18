@@ -1,10 +1,21 @@
-from tensorflow.keras.losses import Loss, BinaryCrossentropy, sparse_categorical_crossentropy, MSE, binary_crossentropy
+from tensorflow.keras.losses import Loss
 from tensorflow.keras import backend as K
+from config import GRID_SIZE
+
 
 class WholeOutputLoss(Loss):
     '''
     Inspired by https://fairyonice.github.io/Part_4_Object_Detection_with_Yolo_using_VOC_2012_data_loss.html
     '''
+
+    def __init__(self, grid_x, grid_y, grid_size=GRID_SIZE, negative_box_coef=0.25, position_coef=5, size_coef=5):
+        super(WholeOutputLoss, self).__init__()
+        self.grid_x = grid_x
+        self.grid_y = grid_y
+        self.grid_size = grid_size
+        self.negative_box_coef = negative_box_coef
+        self.position_coef = position_coef
+        self.size_coef = size_coef
 
     def call(self, y_true, y_pred):
         if not K.is_keras_tensor(y_pred):
@@ -18,7 +29,7 @@ class WholeOutputLoss(Loss):
         true_box_w = y_true[..., 2]
         true_box_h = y_true[..., 3]
         true_box_conf = y_true[..., 4]
-        true_box_class = y_true[..., 5:]
+        # true_box_class = y_true[..., 5:]
 
         pred_box_coords = y_pred[..., 0:2]
         pred_box_size = y_pred[..., 2:4]
@@ -27,44 +38,32 @@ class WholeOutputLoss(Loss):
         pred_box_w = y_pred[..., 2]
         pred_box_h = y_pred[..., 3]
         pred_box_conf = y_pred[..., 4]
-        pred_box_class =  y_pred[..., 5:]
+        # pred_box_class =  y_pred[..., 5:]
 
-        box_conf_loss = 0.5 * K.sum(K.abs(1 - true_box_conf) * K.square(true_box_conf - pred_box_conf)) + \
-                        K.sum(true_box_conf * K.square(true_box_conf - pred_box_conf))
+        # https://blog.emmanuelcaradec.com/humble-yolo-implementation-in-keras/
+        intersect_w = K.maximum(K.zeros_like(pred_box_w), (pred_box_w + true_box_w) * self.grid_size[0] / 2 - K.abs(
+            pred_box_x - true_box_x))
+        intersect_h = K.maximum(K.zeros_like(pred_box_h), (pred_box_h + true_box_h) * self.grid_size[1] / 2 - K.abs(
+            pred_box_y - true_box_y) )
 
-        x_loss = K.sum(true_box_conf * K.square(true_box_x - pred_box_x) * K.sqrt(true_box_w))
-        y_loss = K.sum(true_box_conf * K.square(true_box_y - pred_box_y) * K.sqrt(true_box_h))
-        box_pos_loss = 5 * (x_loss + y_loss)
-        box_size_loss = 5 * K.sum(
-            true_box_conf * K.sum(K.square(K.sqrt(true_box_sizes) - K.sqrt(pred_box_size)), axis=-1))
-        class_loss =  K.sum(true_box_conf *K.sum(K.square(true_box_class - pred_box_class), axis=-1))
-        return box_pos_loss + box_size_loss + box_conf_loss + class_loss
-    #  return K.sum(true_box_conf * sum_squared_error(y_true, y_pred), axis=-1) \
-    #  + K.sum(true_box_conf * sum_squared_sqrt_error(y_true, y_pred), axis=-1) \
-    #  + binary_crossentropy(true_box_conf, pred_box_conf)
+        intersect_area = intersect_w * intersect_h
 
-#
-# class IsObjectLoss(Loss):
-#     def call(self, y_true, y_pred):
-#         y_pred = ops.convert_to_tensor(y_pred)
-#         y_true = math_ops.cast(y_true, y_pred.dtype)
-#         y_true = K.expand_dims(y_true)
-#         loss = K.square(y_true - y_pred)
-#         coef = (K.cast(K.equal(y_true, K.zeros_like(y_true)), K.floatx()) + 1) / 2
-#         return K.sum(coef * loss, axis=-1)
-#
-#
-# class SumSquaredError(Loss):
-#     def call(self, y_true, y_pred, sample_weight=None):
-#         if not K.is_keras_tensor(y_pred):
-#             y_pred = K.constant(y_pred)
-#         y_true = K.cast(y_true, y_pred.dtype)
-#         return K.sum(K.square(y_true - y_pred), axis=-1)
-#
-#
-# class SumSquaredSqrtError(Loss):
-#     def call(self, y_true, y_pred, sample_weight=None):
-#         if not K.is_keras_tensor(y_pred):
-#             y_pred = K.constant(y_pred)
-#         y_true = K.cast(y_true, y_pred.dtype)
-#         return K.sum(K.square(K.sqrt(y_true) - K.sqrt(y_pred)), axis=-1)
+        true_area = true_box_w * self.grid_size[0]* true_box_h *self.grid_size[1]
+        pred_area = pred_box_w* self.grid_size[0] * pred_box_h *self.grid_size[1]
+        union_area = pred_area + true_area - intersect_area
+
+        iou = intersect_area / union_area
+
+        conf_loss = K.sum(K.square(true_box_conf * iou - pred_box_conf) * true_box_conf, axis=-1)
+
+        conf_loss = conf_loss + self.negative_box_coef * K.sum(
+            K.square(true_box_conf * iou - pred_box_conf) * K.abs(1 - true_box_conf), axis=-1)
+
+        box_pos_loss = self.position_coef * K.sum(
+            true_box_conf * K.sum(K.square(true_box_coords - pred_box_coords), axis=-1), axis=-1)
+
+        box_size_loss = self.size_coef * K.sum(
+            true_box_conf * K.sum(K.square(K.sqrt(true_box_sizes) - K.sqrt(pred_box_size)), axis=-1), axis=-1)
+        # class_loss =  K.sum(true_box_conf *K.sum(K.square(true_box_class - pred_box_class), axis=-1))
+        loss = box_pos_loss + box_size_loss + conf_loss  # + class_loss
+        return loss
