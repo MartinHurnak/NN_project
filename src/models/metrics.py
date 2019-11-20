@@ -29,7 +29,10 @@ def test_met(y_true, y_pred):
     # pred_box_class =  y_pred[..., 5:]
     for i in range(16):
         argm = iou([4,4], pred_box_x, pred_box_y, pred_box_w, pred_box_h, K.expand_dims(true_box_x[...,i]), K.expand_dims(true_box_y[...,i]), K.expand_dims(true_box_w[...,i]), K.expand_dims(true_box_h[...,i]))
-        print(argm)
+        #print(argm)
+        #print(K.greater_equal(argm, 0.5*K.ones_like(argm)))
+        print(K.cast(K.greater_equal(argm, 0.5*K.ones_like(argm)), 'float32') * (K.cast(K.greater_equal(pred_box_conf, 0.5 * K.ones_like(pred_box_conf)), 'float32')))
+        print(
         #print(true_box_conf[...,i])
         #print(K.equal(true_box_conf[...,i]), K.ones_like())
     return K.argmax(iou([4,4], pred_box_x, pred_box_y, pred_box_w, pred_box_h, true_box_x, true_box_y, true_box_w, true_box_h))
