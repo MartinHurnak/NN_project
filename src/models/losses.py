@@ -1,7 +1,22 @@
 from tensorflow.keras.losses import Loss
 from tensorflow.keras import backend as K
 from config import GRID_SIZE
+#from src.models.metrics import iou
 
+
+def iou(grid_size, pred_box_x, pred_box_y, pred_box_w, pred_box_h, true_box_x, true_box_y, true_box_w, true_box_h):
+    intersect_w = K.maximum(K.zeros_like(pred_box_w), (pred_box_w + true_box_w) * grid_size[0] / 2 - K.abs(
+        pred_box_x - true_box_x))
+    intersect_h = K.maximum(K.zeros_like(pred_box_h), (pred_box_h + true_box_h) * grid_size[1] / 2 - K.abs(
+        pred_box_y - true_box_y))
+
+    intersect_area = intersect_w * intersect_h
+
+    true_area = true_box_w * grid_size[0] * true_box_h * grid_size[1]
+    pred_area = pred_box_w * grid_size[0] * pred_box_h * grid_size[1]
+    union_area = pred_area + true_area - intersect_area
+
+    return intersect_area / union_area
 
 class WholeOutputLoss(Loss):
     '''
@@ -41,23 +56,24 @@ class WholeOutputLoss(Loss):
         # pred_box_class =  y_pred[..., 5:]
 
         # https://blog.emmanuelcaradec.com/humble-yolo-implementation-in-keras/
-        intersect_w = K.maximum(K.zeros_like(pred_box_w), (pred_box_w + true_box_w) * self.grid_size[0] / 2 - K.abs(
-            pred_box_x - true_box_x))
-        intersect_h = K.maximum(K.zeros_like(pred_box_h), (pred_box_h + true_box_h) * self.grid_size[1] / 2 - K.abs(
-            pred_box_y - true_box_y) )
+        iou2 = iou(self.grid_size, pred_box_x, pred_box_y, pred_box_w, pred_box_h, true_box_x, true_box_y, true_box_w, true_box_h)
+        # intersect_w = K.maximum(K.zeros_like(pred_box_w), (pred_box_w + true_box_w) * self.grid_size[0] / 2 - K.abs(
+        #     pred_box_x - true_box_x))
+        # intersect_h = K.maximum(K.zeros_like(pred_box_h), (pred_box_h + true_box_h) * self.grid_size[1] / 2 - K.abs(
+        #     pred_box_y - true_box_y) )
+        #
+        # intersect_area = intersect_w * intersect_h
+        #
+        # true_area = true_box_w * self.grid_size[0]* true_box_h *self.grid_size[1]
+        # pred_area = pred_box_w* self.grid_size[0] * pred_box_h *self.grid_size[1]
+        # union_area = pred_area + true_area - intersect_area
+        #
+        # iou = intersect_area / union_area
 
-        intersect_area = intersect_w * intersect_h
-
-        true_area = true_box_w * self.grid_size[0]* true_box_h *self.grid_size[1]
-        pred_area = pred_box_w* self.grid_size[0] * pred_box_h *self.grid_size[1]
-        union_area = pred_area + true_area - intersect_area
-
-        iou = intersect_area / union_area
-
-        conf_loss = K.sum(K.square(true_box_conf * iou - pred_box_conf) * true_box_conf, axis=-1)
+        conf_loss = K.sum(K.square(true_box_conf * iou2 - pred_box_conf) * true_box_conf, axis=-1)
 
         conf_loss = conf_loss + self.negative_box_coef * K.sum(
-            K.square(true_box_conf * iou - pred_box_conf) * K.abs(1 - true_box_conf), axis=-1)
+            K.square(true_box_conf * iou2 - pred_box_conf) * K.abs(1 - true_box_conf), axis=-1)
 
         box_pos_loss = self.position_coef * K.sum(
             true_box_conf * K.sum(K.square(true_box_coords - pred_box_coords), axis=-1), axis=-1)

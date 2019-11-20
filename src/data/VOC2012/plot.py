@@ -24,11 +24,11 @@ def plot_grid(data, df_id, prediction, plot_ground_truth=True):
         ax.axvline(i * cell_w, linestyle='--', color='k')  # vertical lines
         for j in range(GRID_SIZE[1]):
             pred = prediction[i * GRID_SIZE[0] + j]
+
             boxes_coord = pred[0:2]
             boxes_size = pred[2:4]
             obj = pred[4]
             # cls = pred[5:]
-
             true = data['grid_' + str(i) + '_' + str(j)][df_id][0][0]
             is_obj = true[4]
 

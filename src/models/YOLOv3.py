@@ -1,6 +1,6 @@
 from tensorflow import keras
 from tensorflow.keras.layers import Conv2D, add, Activation, GlobalAveragePooling2D, Dense, concatenate, Concatenate, \
-    BatchNormalization, GlobalMaxPooling2D,MaxPooling2D
+    BatchNormalization, GlobalMaxPooling2D,MaxPooling2D, Reshape
 from config import CONV_ACTIVATION, CONV_BASE_SIZE, YOLO_LAYERS_COUNTS, GRID_SIZE, GRID_CELL_BOXES
 
 
@@ -61,6 +61,9 @@ def create_model(num_classes):
                 output.append(
                     Concatenate(name='out_{}_{}_{}'.format(i, j, b))([bb_coord, bb_size, has_object]))
 
-    model = keras.Model(inputs=input, outputs=output)
+    concat = Concatenate(name='output')(output)
+    out=Reshape(target_shape=(-1,16,5))(concat)
+
+    model = keras.Model(inputs=input, outputs=out)
 
     return model
