@@ -29,5 +29,18 @@ class DataGenGrid:
                                                 target_size=self.input_size,
                                                 class_mode='multi_output',
                                                 batch_size=self.batch_size,
-                                                subset='validation'
+                                                subset='validation',
+                                                shuffle=False
+                                                )
+
+    def flow_test(self, data):
+        return self.datagen.flow_from_dataframe(data,
+                                                directory='data/raw/VOC2012/JPEGImages',
+                                                x_col='filename',
+                                                y_col=['grid_output'],
+                                                target_size=self.input_size,
+                                                class_mode='multi_output',
+                                                batch_size=self.batch_size,
+                                                subset='training',
+                                                shuffle=False
                                                 )

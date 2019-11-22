@@ -4,7 +4,7 @@ from tensorflow.keras.layers import Conv2D, add, Activation, GlobalAveragePoolin
 from config import CONV_ACTIVATION, CONV_BASE_SIZE, YOLO_LAYERS_COUNTS, GRID_SIZE, GRID_CELL_BOXES
 from src.models.DataGen import DataGenGrid
 from src.models.losses import SumSquaredLoss
-from src.models.metrics import precision
+from src.models.metrics import precision, recall
 from tensorflow.keras import backend as K
 from src.data.VOC2012.data import classes
 from datetime import datetime
@@ -87,10 +87,10 @@ def create_and_fit(data, epochs, batch_size, val_split=0.1, **kwargs):
     ]
     print('Logs:', log)
 
-    model.compile(loss=SumSquaredLoss(negative_box_coef=0.25), metrics=[precision], optimizer='adam')
+    model.compile(loss=SumSquaredLoss(negative_box_coef=0.25), metrics=[precision, recall], optimizer='adam')
     model.fit_generator(datagen.flow_train(data),
                         epochs=epochs,
-                        validation_data=datagen.flow_val(data),
+                        validation_data=datagen.flow_val(data) if val_split>0.0 else None,
                         callbacks=callbacks,
                         **kwargs
                        )
