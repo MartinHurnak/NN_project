@@ -51,7 +51,7 @@ class SumSquaredLoss(Loss):
             true_box_conf * K.sum(K.square(true_box_coords - pred_box_coords), axis=-1), axis=-1)
 
         box_size_loss = self.size_coef * K.sum(
-            true_box_conf * K.sum(K.square(true_box_sizes - pred_box_size), axis=-1), axis=-1)
+            true_box_conf * K.sum(K.square(K.sqrt(true_box_sizes+K.epsilon()) - K.sqrt(pred_box_size+K.epsilon())), axis=-1), axis=-1)
         # class_loss =  K.sum(true_box_conf *K.sum(K.square(true_box_class - pred_box_class), axis=-1))
         loss = box_pos_loss + box_size_loss + conf_loss  # + class_loss
         return loss
