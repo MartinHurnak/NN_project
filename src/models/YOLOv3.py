@@ -90,7 +90,7 @@ def create_and_fit(data, epochs, batch_size, val_split=0.1, **kwargs):
     model.compile(loss=SumSquaredLoss(negative_box_coef=0.25), metrics=[precision], optimizer='adam')
     model.fit_generator(datagen.flow_train(data),
                         epochs=epochs,
-                        #validation_data=datagen.flow_val(data),
+                        validation_data=datagen.flow_val(data),
                         callbacks=callbacks,
                         **kwargs
                        )
