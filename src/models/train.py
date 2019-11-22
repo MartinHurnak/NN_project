@@ -1,5 +1,5 @@
 import pandas as pd
-from YOLOv3 import create_and_fit
+from src.models.YOLOv3 import create_and_fit
 
 pickle_file = 'data/preprocessed/VOC2012/preprocessed.pkl'
 df = pd.read_pickle(pickle_file)
