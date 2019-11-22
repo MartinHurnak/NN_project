@@ -2,7 +2,13 @@ from tensorflow import keras
 from tensorflow.keras.layers import Conv2D, add, Activation, GlobalAveragePooling2D, Dense, concatenate, Concatenate, \
     BatchNormalization, GlobalMaxPooling2D,MaxPooling2D, Reshape
 from config import CONV_ACTIVATION, CONV_BASE_SIZE, YOLO_LAYERS_COUNTS, GRID_SIZE, GRID_CELL_BOXES
-
+from src.models.DataGen import DataGenGrid
+from src.models.losses import SumSquaredLoss
+from src.models.metrics import precision
+from tensorflow.keras import backend as K
+from src.data.VOC2012.data import classes
+from datetime import datetime
+import os
 
 class YoloLayer(keras.layers.Layer):
     def __init__(self, filters_1, filters_2, activation=CONV_ACTIVATION):
@@ -66,4 +72,28 @@ def create_model(num_classes):
 
     model = keras.Model(inputs=input, outputs=out)
 
+    return model
+
+def create_and_fit(data, epochs, batch_size, val_split=0.1, **kwargs):
+    datagen = DataGenGrid(batch_size=batch_size, input_size=(256,256), validation_split=val_split)
+
+    K.clear_session()
+    model = create_model(len(classes))
+
+    log = datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+    callbacks = [
+        keras.callbacks.TensorBoard(
+            log_dir=os.path.join("logs", log),
+            histogram_freq=1,
+            profile_batch=0)
+    ]
+    print('Logs:', log)
+
+    model.compile(loss=SumSquaredLoss(negative_box_coef=0.0), metrics=[precision], optimizer='adam')
+    model.fit_generator(datagen.flow_train(data),
+                        epochs=epochs,
+                        #validation_data=datagen.flow_val(data),
+                        callbacks=callbacks,
+                        **kwargs
+                       )
     return model
