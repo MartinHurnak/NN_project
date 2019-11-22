@@ -12,8 +12,6 @@ def recall(y_true, y_pred, threshold=0.5):
 def precision(y_true, y_pred, threshold=0.5):
     tp = true_positives(y_true, y_pred, threshold)
     p = positives(y_true, y_pred, threshold)
-    print('TP:', tp)
-    print('P:', p)
     return tp / (p + K.epsilon())
 
 

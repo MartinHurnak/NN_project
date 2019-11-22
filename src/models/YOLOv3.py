@@ -1,6 +1,6 @@
 from tensorflow import keras
 from tensorflow.keras.layers import Conv2D, add, Activation, GlobalAveragePooling2D, Dense, concatenate, Concatenate, \
-    BatchNormalization, GlobalMaxPooling2D,MaxPooling2D, Reshape
+    BatchNormalization, GlobalMaxPooling2D, MaxPooling2D, Reshape
 from config import CONV_ACTIVATION, CONV_BASE_SIZE, YOLO_LAYERS_COUNTS, GRID_SIZE, GRID_CELL_BOXES
 from src.models.DataGen import DataGenGrid
 from src.models.losses import SumSquaredLoss
@@ -10,9 +10,13 @@ from src.data.VOC2012.data import classes
 from datetime import datetime
 import os
 
+
 class YoloLayer(keras.layers.Layer):
-    def __init__(self, filters_1, filters_2, activation=CONV_ACTIVATION):
-        super(YoloLayer, self).__init__()
+    def __init__(self, filters_1, filters_2, activation=CONV_ACTIVATION, **kwargs):
+        super(YoloLayer, self).__init__(**kwargs)
+        self.filters_1 = filters_1
+        self.filters_2 = filters_2
+        self.activation = activation
         self.conv_1 = Conv2D(filters_1, (1, 1), activation=activation, padding='same')
         self.conv_2 = Conv2D(filters_2, (3, 3), activation=activation, padding='same')
 
@@ -21,6 +25,14 @@ class YoloLayer(keras.layers.Layer):
         l = self.conv_2(l)
         l = add([x, l])
         return l
+
+    def get_config(self):
+        config = {}
+        config.update({'filters_1': self.filters_1})
+        config.update({'filters_2': self.filters_2})
+        config.update({'activation': self.activation})
+        base_config = super(YoloLayer, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
 
 
 def create_model(num_classes):
@@ -65,14 +77,15 @@ def create_model(num_classes):
                     Concatenate(name='out_{}_{}_{}'.format(i, j, b))([bb_coord, bb_size, has_object]))
 
     concat = Concatenate(name='output')(output)
-    out=Reshape(target_shape=(-1,16,5))(concat)
+    out = Reshape(target_shape=(-1, 16, 5))(concat)
 
     model = keras.Model(inputs=input, outputs=out)
 
     return model
 
+
 def create_and_fit(data, epochs, batch_size, val_split=0.1, **kwargs):
-    datagen = DataGenGrid(batch_size=batch_size, input_size=(256,256), validation_split=val_split)
+    datagen = DataGenGrid(batch_size=batch_size, input_size=(256, 256), validation_split=val_split)
 
     K.clear_session()
     model = create_model(len(classes))
@@ -90,8 +103,8 @@ def create_and_fit(data, epochs, batch_size, val_split=0.1, **kwargs):
     model.compile(loss=SumSquaredLoss(negative_box_coef=0.25), metrics=[precision, recall], optimizer='adam')
     model.fit_generator(datagen.flow_train(data),
                         epochs=epochs,
-                        validation_data=datagen.flow_val(data) if val_split>0.0 else None,
+                        validation_data=datagen.flow_val(data) if val_split > 0.0 else None,
                         callbacks=callbacks,
                         **kwargs
-                       )
+                        )
     return model
