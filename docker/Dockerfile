@@ -2,11 +2,11 @@ FROM tensorflow/tensorflow:latest-gpu-py3-jupyter
 
 WORKDIR /NN_project
 
-COPY docker/requirements.txt ./
+COPY requirements.txt ./
 
 RUN pip install -r requirements.txt
 
-COPY ./.. /NN_project
+COPY . /NN_project
 
 EXPOSE 8888
 
