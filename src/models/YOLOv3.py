@@ -15,13 +15,11 @@ class YoloLayer(keras.layers.Layer):
         super(YoloLayer, self).__init__()
         self.conv_1 = Conv2D(filters_1, (1, 1), activation=activation, padding='same')
         self.conv_2 = Conv2D(filters_2, (3, 3), activation=activation, padding='same')
-        self.norm = BatchNormalization()
 
     def call(self, x):
         l = self.conv_1(x)
         l = self.conv_2(l)
         l = add([x, l])
-        l = self.norm(l)
         return l
 
 
@@ -30,7 +28,6 @@ def create_model(num_classes):
     model_layers = [
         Conv2D(CONV_BASE_SIZE, (3, 3), padding='same', activation=CONV_ACTIVATION),
         Conv2D(2 * CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=CONV_ACTIVATION),
-        BatchNormalization(),
         YoloLayer(CONV_BASE_SIZE, 2 * CONV_BASE_SIZE, activation=CONV_ACTIVATION),
         Conv2D(4 * CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=CONV_ACTIVATION),
 
@@ -48,7 +45,7 @@ def create_model(num_classes):
                     YOLO_LAYERS_COUNTS[3]
     model_layers += [
         GlobalAveragePooling2D(),
-        Dense(1024, activation=CONV_ACTIVATION)
+        Dense(4096, activation=CONV_ACTIVATION)
     ]
 
     x = input
@@ -85,11 +82,12 @@ def create_and_fit(data, epochs, batch_size, val_split=0.1, **kwargs):
         keras.callbacks.TensorBoard(
             log_dir=os.path.join("logs", log),
             histogram_freq=1,
+            update_freq='batch',
             profile_batch=0)
     ]
     print('Logs:', log)
 
-    model.compile(loss=SumSquaredLoss(negative_box_coef=0.0), metrics=[precision], optimizer='adam')
+    model.compile(loss=SumSquaredLoss(negative_box_coef=0.25), metrics=[precision], optimizer='adam')
     model.fit_generator(datagen.flow_train(data),
                         epochs=epochs,
                         #validation_data=datagen.flow_val(data),
