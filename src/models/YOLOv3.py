@@ -1,19 +1,18 @@
 from tensorflow import keras
 from tensorflow.keras.layers import Conv2D, add, Activation, GlobalAveragePooling2D, Dense, concatenate, Concatenate, \
-    BatchNormalization, GlobalMaxPooling2D,MaxPooling2D, Reshape
-from config import CONV_ACTIVATION, CONV_BASE_SIZE, YOLO_LAYERS_COUNTS, GRID_SIZE, GRID_CELL_BOXES
+    BatchNormalization, GlobalMaxPooling2D, MaxPooling2D, Reshape
+import config
 from src.models.DataGen import DataGenGrid
 from src.models.losses import SumSquaredLoss
 from src.models.metrics import precision, recall
 from tensorflow.keras import backend as K
-from tensorflow.keras.callbacks import History
-history = History()
 from src.data.VOC2012.data import classes
 from datetime import datetime
 import os
 
+
 class YoloLayer(keras.layers.Layer):
-    def __init__(self, filters_1, filters_2, activation=CONV_ACTIVATION, **kwargs):
+    def __init__(self, filters_1, filters_2, activation=config.CONV_ACTIVATION, **kwargs):
         super(YoloLayer, self).__init__(**kwargs)
         self.filters_1 = filters_1
         self.filters_2 = filters_2
@@ -28,7 +27,7 @@ class YoloLayer(keras.layers.Layer):
         return l
 
     def get_config(self):
-        config={}
+        config = {}
         config.update({'filters_1': self.filters_1})
         config.update({'filters_2': self.filters_2})
         config.update({'activation': self.activation})
@@ -36,30 +35,36 @@ class YoloLayer(keras.layers.Layer):
         return dict(list(base_config.items()) + list(config.items()))
 
 
-
 def create_model(num_classes):
     input = keras.layers.Input(shape=(256, 256, 3,))
     model_layers = [
-        Conv2D(CONV_BASE_SIZE, (3, 3), padding='same', activation=CONV_ACTIVATION),
-        Conv2D(2 * CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=CONV_ACTIVATION),
-        YoloLayer(CONV_BASE_SIZE, 2 * CONV_BASE_SIZE, activation=CONV_ACTIVATION),
-        Conv2D(4 * CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=CONV_ACTIVATION),
+        Conv2D(config.CONV_BASE_SIZE, (3, 3), padding='same', activation=config.CONV_ACTIVATION),
+        Conv2D(2 * config.CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=config.CONV_ACTIVATION),
+        YoloLayer(config.CONV_BASE_SIZE, 2 * config.CONV_BASE_SIZE, activation=config.CONV_ACTIVATION),
+        Conv2D(4 * config.CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=config.CONV_ACTIVATION),
 
     ]
-    model_layers += [YoloLayer(2 * CONV_BASE_SIZE, 4 * CONV_BASE_SIZE, activation=CONV_ACTIVATION)] * \
-                    YOLO_LAYERS_COUNTS[0]
-    model_layers.append(Conv2D(8 * CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=CONV_ACTIVATION))
-    model_layers += [YoloLayer(2 * CONV_BASE_SIZE, 8 * CONV_BASE_SIZE, activation=CONV_ACTIVATION)] * \
-                    YOLO_LAYERS_COUNTS[1]
-    model_layers.append(Conv2D(16 * CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=CONV_ACTIVATION))
-    model_layers += [YoloLayer(8 * CONV_BASE_SIZE, 16 * CONV_BASE_SIZE, activation=CONV_ACTIVATION)] * \
-                    YOLO_LAYERS_COUNTS[2]
-    model_layers.append(Conv2D(32 * CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=CONV_ACTIVATION))
-    model_layers += [YoloLayer(16 * CONV_BASE_SIZE, 32 * CONV_BASE_SIZE, activation=CONV_ACTIVATION)] * \
-                    YOLO_LAYERS_COUNTS[3]
+    model_layers += [YoloLayer(2 * config.CONV_BASE_SIZE, 4 * config.CONV_BASE_SIZE,
+                               activation=config.CONV_ACTIVATION)] * \
+                    config.YOLO_LAYERS_COUNTS[0]
+    model_layers.append(
+        Conv2D(8 * config.CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=config.CONV_ACTIVATION))
+    model_layers += [YoloLayer(2 * config.CONV_BASE_SIZE, 8 * config.CONV_BASE_SIZE,
+                               activation=config.CONV_ACTIVATION)] * \
+                    config.YOLO_LAYERS_COUNTS[1]
+    model_layers.append(
+        Conv2D(16 * config.CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=config.CONV_ACTIVATION))
+    model_layers += [YoloLayer(8 * config.CONV_BASE_SIZE, 16 * config.CONV_BASE_SIZE,
+                               activation=config.CONV_ACTIVATION)] * \
+                    config.YOLO_LAYERS_COUNTS[2]
+    model_layers.append(
+        Conv2D(32 * config.CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=config.CONV_ACTIVATION))
+    model_layers += [YoloLayer(16 * config.CONV_BASE_SIZE, 32 * config.CONV_BASE_SIZE,
+                               activation=config.CONV_ACTIVATION)] * \
+                    config.YOLO_LAYERS_COUNTS[3]
     model_layers += [
         GlobalAveragePooling2D(),
-        Dense(4096, activation=CONV_ACTIVATION)
+        Dense(4096, activation=config.CONV_ACTIVATION)
     ]
 
     x = input
@@ -67,9 +72,9 @@ def create_model(num_classes):
         x = layer(x)
 
     output = []
-    for i in range(GRID_SIZE[0]):
-        for j in range(GRID_SIZE[1]):
-            for b in range(GRID_CELL_BOXES):
+    for i in range(config.GRID_SIZE[0]):
+        for j in range(config.GRID_SIZE[1]):
+            for b in range(config.GRID_CELL_BOXES):
                 bb_coord = Dense(2, activation='sigmoid', name='bb_coord_{}_{}_{}'.format(i, j, b))(x)
                 bb_size = Dense(2, activation='sigmoid', name='bb_size_{}_{}_{}'.format(i, j, b))(x)
                 has_object = Dense(1, activation='sigmoid', name='is_object_output_{}_{}_{}'.format(i, j, b))(x)
@@ -79,14 +84,15 @@ def create_model(num_classes):
                     Concatenate(name='out_{}_{}_{}'.format(i, j, b))([bb_coord, bb_size, has_object]))
 
     concat = Concatenate(name='output')(output)
-    out=Reshape(target_shape=(-1,16,5))(concat)
+    out = Reshape(target_shape=(-1, 16, 5))(concat)
 
     model = keras.Model(inputs=input, outputs=out)
 
     return model
 
+
 def create_and_fit(data, epochs, batch_size, val_split=0.1, **kwargs):
-    datagen = DataGenGrid(batch_size=batch_size, input_size=(256,256), validation_split=val_split)
+    datagen = DataGenGrid(batch_size=batch_size, input_size=(256, 256), validation_split=val_split)
 
     K.clear_session()
     model = create_model(len(classes))
@@ -101,14 +107,16 @@ def create_and_fit(data, epochs, batch_size, val_split=0.1, **kwargs):
     ]
     print('Logs:', log)
 
-    model.compile(loss=SumSquaredLoss(negative_box_coef=0.25), metrics=[precision, recall], optimizer='adam')
+    model.compile(loss=SumSquaredLoss(negative_box_coef=config.LOSS_NEGATIVE_BOX_COEF, size_coef=config.LOSS_SIZE_COEF,
+                                      position_coef=config.LOSS_POSITION_COEF), metrics=[precision, recall],
+                  optimizer='adam')
     history = model.fit_generator(datagen.flow_train(data),
-                        epochs=epochs,
-                        validation_data=datagen.flow_val(data) if val_split>0.0 else None,
-                        callbacks=callbacks,
-                        **kwargs
-                       )
-    
+                                  epochs=epochs,
+                                  validation_data=datagen.flow_val(data) if val_split > 0.0 else None,
+                                  callbacks=callbacks,
+                                  **kwargs
+                                  )
+
     log_dict = {
         "log_name": log,
         "learning_rate": K.eval(model.optimizer.lr),
