@@ -52,7 +52,6 @@ def true_positives(y_true, y_pred, threshold=0.5):
         K.cast(K.greater(pred_box_conf, threshold * K.ones_like(pred_box_conf)), K.floatx()))
 
     tp = K.max(tp, axis=-1)
-    print('TRUE POSITIVE', tp)
     return K.sum(tp, axis=0)
 
 
