@@ -22,7 +22,7 @@ def positives(y_true, y_pred, threshold=0.5):
     pred_box_conf = y_pred[..., 4]
 
     p_box = (K.cast(K.greater(pred_box_conf, threshold * K.ones_like(pred_box_conf)), K.floatx()))
-    return K.sum(p_box)
+    return K.sum(p_box, axis=-1)
 
 
 def true_positives(y_true, y_pred, threshold=0.5):
@@ -34,6 +34,7 @@ def true_positives(y_true, y_pred, threshold=0.5):
     true_box_y = y_true[..., 1]
     true_box_w = y_true[..., 2]
     true_box_h = y_true[..., 3]
+    true_box_conf = y_true[...,4]
 
     pred_box_x = y_pred[..., 0]
     pred_box_y = y_pred[..., 1]
@@ -48,8 +49,7 @@ def true_positives(y_true, y_pred, threshold=0.5):
     tp = K.cast(K.greater(iou, 0.5 * K.ones_like(iou)), K.floatx()) * (
         K.cast(K.greater(pred_box_conf, threshold * K.ones_like(pred_box_conf)), K.floatx()))
 
-    tp = K.max(tp, axis=0)
-
+    tp = K.max(tp, axis=0) * true_box_conf
     return K.sum(tp, axis=-1)
 
 
@@ -76,5 +76,4 @@ def false_negative(y_true, y_pred, threshold=0.5):
     fn = K.cast(K.greater(iou, 0.5 * K.ones_like(iou)), K.floatx()) * (
         K.cast(K.greater_equal(pred_box_conf, threshold * K.ones_like(pred_box_conf)), K.floatx()))
     fn = K.cast(K.equal(K.max(fn, axis=0), K.zeros_like(K.max(fn, axis=0))), K.floatx()) * true_box_conf
-
     return K.sum(fn, axis=-1)
