@@ -130,22 +130,24 @@ def create_and_fit(data, epochs, batch_size, val_split=0.1, **kwargs):
         }
     }
     log_json = json.dumps(str(log_dict))
-    #print(log_json)
     
     script_dir = os.path.dirname(__file__)
-    print(script_dir)
     rel_path = "../../logs/log.json"
     path_json = os.path.join(script_dir, rel_path)
-    print(path_json)
-    #path_json = '/NN_project/logs/log.json'
     
-    with open(path_json) as file_json:
-        json_log_file = json.load(file_json)
-    
-    json_log_file.append(log_json)
-    
+    ###delete me
     with open(path_json, 'w') as file_json:
-        json.dump(json_log_file, json_file)
+        json.dump(log_json, file_json)
+    ###
+        
+    #with open(path_json) as file_json:
+        #json_logs_from_file = json.load(file_json)
+    #print(json_logs_from_file)
+    
+    #json_logs_from_file.append(log_json)
+    
+    #with open(path_json, 'w') as file_json:
+    #    json.dump(json_logs_from_file, file_json)
 
     if not os.path.exists('models'):
         os.makedirs('models')
