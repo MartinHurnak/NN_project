@@ -9,6 +9,7 @@ from tensorflow.keras import backend as K
 from src.data.VOC2012.data import classes
 from datetime import datetime
 import os
+import json
 
 
 class YoloLayer(keras.layers.Layer):
@@ -119,16 +120,23 @@ def create_and_fit(data, epochs, batch_size, val_split=0.1, **kwargs):
 
     log_dict = {
         "log_name": log,
-        "learning_rate": K.eval(model.optimizer.lr),
-        "epochs": epochs,
-        "batch_size": batch_size,
-        "loss_koef_negative_box": K.eval(model.loss.negative_box_coef),
-        "loss_koef_position": K.eval(model.loss.position_coef),
-        "loss_koef_size_coef": K.eval(model.loss.size_coef),
-        "loss": history.history['loss'],
-        "precision": history.history['precision']
+        "parameters": {
+            "learning_rate": K.eval(model.optimizer.lr),
+            "epochs": epochs,
+            "batch_size": batch_size,
+            "loss_koef_negative_box": K.eval(model.loss.negative_box_coef),
+            "loss_koef_position": K.eval(model.loss.position_coef),
+            "loss_koef_size_coef": K.eval(model.loss.size_coef)
+        }
     }
-    print(log_dict)
+    log_json = json.dumps(str(log_dict))
+    
+    script_dir = os.path.dirname(__file__)
+    rel_path = "../../logs/log.json"
+    path_json = os.path.join(script_dir, rel_path)
+
+    with open(path_json, 'a+') as file_json:
+        json.dump(log_json, file_json)
 
     if not os.path.exists('models'):
         os.makedirs('models')
