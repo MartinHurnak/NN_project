@@ -94,7 +94,7 @@ def create_and_fit(data, epochs, batch_size, val_split=0.1, **kwargs):
     log = datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
     callbacks = [
         keras.callbacks.TensorBoard(
-            log_dir=os.path.join("logs", log),
+            log_dir=os.path.join("logs/TensorBoard", log),
             histogram_freq=1,
             update_freq='batch',
             profile_batch=0)
@@ -121,5 +121,9 @@ def create_and_fit(data, epochs, batch_size, val_split=0.1, **kwargs):
         "precision": history.history['precision']
     }
     print(log_dict)
-    
+
+    if not os.path.exists('models'):
+        os.makedirs('models')
+    model.save_weights('models/model.h5')
+
     return model
