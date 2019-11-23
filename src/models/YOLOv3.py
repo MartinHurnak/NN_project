@@ -106,15 +106,15 @@ def create_and_fit(data, epochs, batch_size, val_split=0.1, **kwargs):
             profile_batch=0)
     ]
     print('Logs:', log)
-
-    model.compile(loss=SumSquaredLoss(negative_box_coef=config.LOSS_NEGATIVE_BOX_COEF, size_coef=config.LOSS_SIZE_COEF,
-                                      position_coef=config.LOSS_POSITION_COEF), metrics=[precision, recall],
+    print(kwargs['neg_box_coef'])
+    model.compile(loss=SumSquaredLoss(negative_box_coef=kwargs['neg_box_coef'], size_coef=kwargs['size_coef'],
+                                      position_coef=kwargs['position_coef']), metrics=[precision, recall],
                   optimizer='adam')
+
     history = model.fit_generator(datagen.flow_train(data),
                                   epochs=epochs,
                                   validation_data=datagen.flow_val(data) if val_split > 0.0 else None,
-                                  callbacks=callbacks,
-                                  **kwargs
+                                  callbacks=callbacks
                                   )
 
     log_dict = {
