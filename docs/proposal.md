@@ -56,10 +56,31 @@ This dataset offers 17125 images, from which all of them have annotations that d
 http://host.robots.ox.ac.uk/pascal/VOC/voc2012/index.html
 
 ## Solution Proposal
-We would like to try method similar to YOLO algorithm, where we divide input image into a grid and predict multiple
-bounding box coordinates relative to grid cell, because this approach should not take too long to train. We may 
-experiment with different grid sizes and bounding box counts as their optimal value might be dependant on sizes and count 
-of objects in images. 
+We experiment with approach similar to YOLO algorithm. We divide image into S x S grid and predict bounding box for each 
+grid cell. For feature extraction we use architecture from YOLOv3 paper [6], but experiment different layer sizes 
+and conv-conv-residual layers count.
+
+![architerture of YOLOv3 model](images/YOLOv3.jpg "YOLOv3 architeture [6]")
+
+Output of our model consists of outputs for each grid cell. One bounding box is defined by tuple `(x, y, w, h, c)` where
+`(x, y)` is position of bounding box relative to grid cell, `(w, h)` is size of bounding box relative to whole image and 
+`c` is confidence of prediction. This method was inspired by original YOLO paper [5]. All of the values mentioned are from
+ <0,1> interval, so our output layer consists of `S x S x 5` neurons with sigmoid activation function. We do not predict bounding box classes yet, 
+we train our network only for detecting one class (e.g. people). Our model then looks like this:
+
+![](images/our_model_h.png)
+
+As loss function, we use sum squared error proposed by [5], where we omit box classification part. Our modified loss function 
+then looks like this:
+
+![original YOLO loss with omitted box classification par](images/loss.jpg "part of original YOLO sum squared loss [5]")
+
+Ones with obj/noobj mean that part is only calculated for part that do (1<sup>obj</sup>) or do not (1<sup>noobj</sup>) contain objects. Lambdas 
+in loss function are constant coeficients to prevent gradient from cells that do not contain object overpower
+gradient from cells that do. Original paper uses &lambda;<sub>noobj</sub> = 0.5 and &lambda;<sub>coef</sub> = 5. Probably,
+we will experiment with &lambda;<sub>noobj</sub> as it seems to be important hyperparameter for precision-recall ratio.
+
+
 
 
 ## References
@@ -72,3 +93,5 @@ of objects in images.
 [4] Ren, S., He, K., Girshick, R. and Sun, J., 2015. Faster r-cnn: Towards real-time object detection with region proposal networks. In Advances in neural information processing systems (pp. 91-99).
 
 [5] Redmon, J., Divvala, S., Girshick, R. and Farhadi, A., 2016. You only look once: Unified, real-time object detection. In Proceedings of the IEEE conference on computer vision and pattern recognition (pp. 779-788).
+
+[6] Redmon, J. and Farhadi, A., 2018. Yolov3: An incremental improvement. arXiv preprint arXiv:1804.02767.
