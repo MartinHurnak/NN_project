@@ -1,12 +1,11 @@
-from config import SEQUENCE_LENGTH, GRID_SIZE
 import numpy as np
 from src.data.VOC2012.data import classes, class_encoder, grid_columns
 from src.data.VOC2012.data_loader import load_json
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.utils import to_categorical
 from src.helpers import get_center_size
-
-from config import GRID_CELL_BOXES
+from sklearn.model_selection import train_test_split
+import config
 
 def _create_output(d, img_width, img_height):
     cls = d['name']
@@ -74,8 +73,8 @@ def _create_output_grid(d):
 
 def _create_grid(row):
 
-    for i in range(GRID_SIZE[0]):
-        for j in range(GRID_SIZE[1]):
+    for i in range(config.GRID_SIZE[0]):
+        for j in range(config.GRID_SIZE[1]):
             objects = []
             for o in row['object']:
                 #print(o)
@@ -84,7 +83,7 @@ def _create_grid(row):
             if len(objects)==0:
                 objects.append(np.zeros(5))
                 #objects.append(np.zeros(5+len(classes)))
-            row['grid_' + str(i) + '_' + str(j)] = pad_sequences([objects],maxlen=GRID_CELL_BOXES, dtype='float32', padding='post', truncating='post')
+            row['grid_' + str(i) + '_' + str(j)] = pad_sequences([objects],maxlen=config.GRID_CELL_BOXES, dtype='float32', padding='post', truncating='post')
     return row
 
 def preprocess(data):
@@ -93,7 +92,7 @@ def preprocess(data):
     data['output'] = data.apply(
         lambda x: _create_outputs(x['object'], x['width'], x['height']), axis=1)
 
-    data['output'] = data['output'].apply(lambda x: pad_sequences([x], SEQUENCE_LENGTH, dtype='float32', padding='post')).apply(np.vstack)
+    data['output'] = data['output'].apply(lambda x: pad_sequences([x], config.SEQUENCE_LENGTH, dtype='float32', padding='post')).apply(np.vstack)
 
     data['has_person'] = data['object'].apply(lambda D: np.array([(d['name'] == 'person') for d in D]).any())
 
@@ -103,16 +102,24 @@ def preprocess(data):
     data = data.apply(_create_grid, axis=1)
 
     data['grid_output']=data[grid_columns].apply(np.hstack, axis=1)
+    data = data[data['has_person']].reset_index()
     return data
 
+def split_train_test(data, test_ratio, file_out_train, file_out_test):
+    train, test = train_test_split(np.array(data.index), test_size=test_ratio)
+    data_train = data.iloc[train]
+    data_test = data.iloc[test]
+    data_train.to_pickle(file_out_train)
+    data_test.to_pickle(file_out_test)
+    return data_train, data_test
 
 def load_preprocess(filename):
     data = load_json(filename)
     return preprocess(data)
 
-def load_preprocess_save(file_in, file_out):
+def load_preprocess_save(file_in, file_out_train, file_out_test):
     data = load_json(file_in)
     data = preprocess(data)
-    data.to_pickle(file_out)
-    return data
+    data_train, data_test = split_train_test(data, config.TRAIN_TEST_SPLIT, file_out_train, file_out_test)
+    return data_train, data_test
 

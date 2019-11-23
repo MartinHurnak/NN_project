@@ -1,4 +1,4 @@
 .idea
 venv*
-/data
+/data/raw
 .ipynb*
