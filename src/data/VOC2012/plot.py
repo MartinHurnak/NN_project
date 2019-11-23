@@ -6,7 +6,7 @@ from src.data.VOC2012.data import class_encoder
 from config import GRID_SIZE
 
 
-def plot_grid(data, df_id, prediction, plot_ground_truth=True):
+def plot_grid(data, df_id, prediction, plot_ground_truth=True, plot_fp=False, plot_fn=False):
     im = Image.open(os.path.join('data/raw/VOC2012/JPEGImages', data['filename'][df_id]))
     plt.figure(figsize=(10, 10))
     plt.imshow(im)
@@ -58,27 +58,27 @@ def plot_grid(data, df_id, prediction, plot_ground_truth=True):
                     color = 'r'  # false positive
                 else:
                     color = 'y'  # false negative
+                if (color == 'g') or (color == 'r' and plot_fp) or (color == 'y' and plot_fn):
+                    #print(i, j, boxes_coord, boxes_size, obj, is_obj)
+                    width = boxes_size[0]
+                    height = boxes_size[1]
 
-                print(i, j, boxes_coord, boxes_size, obj, is_obj)
-                width = boxes_size[0]
-                height = boxes_size[1]
+                    x = boxes_coord[0] * cell_w + i * cell_w
+                    y = boxes_coord[1] * cell_h + j * cell_h
 
-                x = boxes_coord[0] * cell_w + i * cell_w
-                y = boxes_coord[1] * cell_h + j * cell_h
+                    width *= img_width
+                    height *= img_height
+                    xmin = x - width / 2
+                    ymin = y - height / 2
 
-                width *= img_width
-                height *= img_height
-                xmin = x - width / 2
-                ymin = y - height / 2
-
-                # print(xmin, ymin, width, height )
-                rect_pred = Rectangle((xmin, ymin), width, height, fill=False, linewidth=5,
-                                 edgecolor=color)
-                # plt.text(xmin, ymin, str(class_encoder.inverse_transform([np.argmax(cls)])[0]) + '_' + str(
-                #    round(cls[np.argmax(cls)], 2)), bbox=dict(facecolor='red', alpha=0.5))
-                plt.text(x, y + img_height // 16, str(round(obj, 3)), bbox=dict(facecolor=color, alpha=0.5))
-                c = Circle((x, y), radius=5, color=color)
-                ax.add_patch(c)
-                ax.add_patch(rect_pred)
+                    # print(xmin, ymin, width, height )
+                    rect_pred = Rectangle((xmin, ymin), width, height, fill=False, linewidth=5,
+                                     edgecolor=color)
+                    # plt.text(xmin, ymin, str(class_encoder.inverse_transform([np.argmax(cls)])[0]) + '_' + str(
+                    #    round(cls[np.argmax(cls)], 2)), bbox=dict(facecolor='red', alpha=0.5))
+                    plt.text(x, y + img_height // 16, str(round(obj, 3)), bbox=dict(facecolor=color, alpha=0.5))
+                    c = Circle((x, y), radius=5, color=color)
+                    ax.add_patch(c)
+                    ax.add_patch(rect_pred)
 
     plt.show()
