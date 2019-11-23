@@ -27,12 +27,12 @@ class YoloLayer(keras.layers.Layer):
         return l
 
     def get_config(self):
-        config = {}
-        config.update({'filters_1': self.filters_1})
-        config.update({'filters_2': self.filters_2})
-        config.update({'activation': self.activation})
+        new_config = {}
+        new_config.update({'filters_1': self.filters_1})
+        new_config.update({'filters_2': self.filters_2})
+        new_config.update({'activation': self.activation})
         base_config = super(YoloLayer, self).get_config()
-        return dict(list(base_config.items()) + list(config.items()))
+        return dict(list(base_config.items()) + list(new_config.items()))
 
 
 def create_model(num_classes):
@@ -106,7 +106,7 @@ def create_and_fit(data, epochs, batch_size, val_split=0.1, **kwargs):
             profile_batch=0)
     ]
     print('Logs:', log)
-    print(kwargs['neg_box_coef'])
+
     model.compile(loss=SumSquaredLoss(negative_box_coef=kwargs['neg_box_coef'], size_coef=kwargs['size_coef'],
                                       position_coef=kwargs['position_coef']), metrics=[precision, recall],
                   optimizer='adam')

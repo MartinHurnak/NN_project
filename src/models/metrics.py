@@ -1,18 +1,19 @@
 import tensorflow.keras.backend as K
 from config import GRID_SIZE
 from src.helpers import intersection_over_union
-
+import numpy as np
 
 def recall(y_true, y_pred, threshold=0.5):
     tp = true_positives(y_true, y_pred, threshold)
     fn = false_negative(y_true, y_pred, threshold)
-    return tp / (tp + fn + K.epsilon())
+    return K.clip(tp / (tp + fn), 0.0, 1.0)
 
 
 def precision(y_true, y_pred, threshold=0.5):
     tp = true_positives(y_true, y_pred, threshold)
     p = positives(y_true, y_pred, threshold)
-    return tp / (p + K.epsilon())
+    precision = tp / p
+    return K.clip(precision, 0.0, 1.0)
 
 
 def positives(y_true, y_pred, threshold=0.5):
@@ -22,6 +23,7 @@ def positives(y_true, y_pred, threshold=0.5):
     pred_box_conf = y_pred[..., 4]
 
     p_box = (K.cast(K.greater(pred_box_conf, threshold * K.ones_like(pred_box_conf)), K.floatx()))
+
     return K.sum(p_box, axis=-1)
 
 
@@ -49,8 +51,9 @@ def true_positives(y_true, y_pred, threshold=0.5):
     tp = K.cast(K.greater(iou, 0.5 * K.ones_like(iou)), K.floatx()) * (
         K.cast(K.greater(pred_box_conf, threshold * K.ones_like(pred_box_conf)), K.floatx()))
 
-    tp = K.max(tp, axis=0) * true_box_conf
-    return K.sum(tp, axis=-1)
+    tp = K.max(tp, axis=-1)
+    print('TRUE POSITIVE', tp)
+    return K.sum(tp, axis=0)
 
 
 def false_negative(y_true, y_pred, threshold=0.5):
