@@ -6,9 +6,9 @@ from src.data.VOC2012.data import class_encoder
 from config import GRID_SIZE
 
 
-def plot_grid(data, df_id, prediction, plot_ground_truth=True, plot_fp=False, plot_fn=False):
+def plot_grid(data, df_id, prediction, plot_ground_truth=True, highlight_fp=False, plot_fn=False, default_color='g', linewidth=3):
     im = Image.open(os.path.join('data/raw/VOC2012/JPEGImages', data['filename'][df_id]))
-    plt.figure(figsize=(10, 10))
+
     plt.imshow(im)
     # Get the current reference
     ax = plt.gca()
@@ -52,13 +52,14 @@ def plot_grid(data, df_id, prediction, plot_ground_truth=True, plot_fp=False, pl
 
             ax.axhline(j * cell_h, linestyle='--', color='k')  # horizontal lines
             if (obj > 0.5) or (is_obj == 1):
-                if (obj > 0.5) and (is_obj == 1):
-                    color = 'g'  # true positive
-                elif is_obj == 0:
-                    color = 'r'  # false positive
+                if (obj > 0.5):
+                    color = default_color  # true positive
+                    if is_obj == 0 and highlight_fp:
+                        color = 'r'  # false positive
                 else:
                     color = 'y'  # false negative
-                if (color == 'g') or (color == 'r' and plot_fp) or (color == 'y' and plot_fn):
+                if (color == 'g') or (color == 'r') or (color == 'y' and plot_fn):
+                    #print(data['grid_output'][df_id][0][i * GRID_SIZE[0] + j])
                     #print(i, j, boxes_coord, boxes_size, obj, is_obj)
                     width = boxes_size[0]
                     height = boxes_size[1]
@@ -72,7 +73,7 @@ def plot_grid(data, df_id, prediction, plot_ground_truth=True, plot_fp=False, pl
                     ymin = y - height / 2
 
                     # print(xmin, ymin, width, height )
-                    rect_pred = Rectangle((xmin, ymin), width, height, fill=False, linewidth=5,
+                    rect_pred = Rectangle((xmin, ymin), width, height, fill=False, linewidth=linewidth,
                                      edgecolor=color)
                     # plt.text(xmin, ymin, str(class_encoder.inverse_transform([np.argmax(cls)])[0]) + '_' + str(
                     #    round(cls[np.argmax(cls)], 2)), bbox=dict(facecolor='red', alpha=0.5))
@@ -81,4 +82,4 @@ def plot_grid(data, df_id, prediction, plot_ground_truth=True, plot_fp=False, pl
                     ax.add_patch(c)
                     ax.add_patch(rect_pred)
 
-    plt.show()
+

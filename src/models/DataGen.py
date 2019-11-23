@@ -41,6 +41,6 @@ class DataGenGrid:
                                                 target_size=self.input_size,
                                                 class_mode='multi_output',
                                                 batch_size=self.batch_size,
-                                                subset='training',
+                                                subset=None,
                                                 shuffle=False
                                                 )
