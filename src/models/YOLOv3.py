@@ -139,7 +139,7 @@ def create_and_fit(data, epochs, batch_size, val_split=0.1, **kwargs):
     with open(path_json, 'w') as file_json:
         json.dump(log_json, file_json)
     ###
-        
+
     #with open(path_json) as file_json:
         #json_logs_from_file = json.load(file_json)
     #print(json_logs_from_file)
