@@ -124,6 +124,6 @@ def create_and_fit(data, epochs, batch_size, val_split=0.1, **kwargs):
 
     if not os.path.exists('models'):
         os.makedirs('models')
-    model.save_weights('models/model.h5')
+    model.save_weights('models/{}.h5'.format(log))
 
     return model
