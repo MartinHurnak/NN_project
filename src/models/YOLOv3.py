@@ -120,16 +120,25 @@ def create_and_fit(data, epochs, batch_size, val_split=0.1, **kwargs):
 
     log_dict = {
         "log_name": log,
-        "learning_rate": K.eval(model.optimizer.lr),
-        "epochs": epochs,
-        "batch_size": batch_size,
-        "loss_koef_negative_box": K.eval(model.loss.negative_box_coef),
-        "loss_koef_position": K.eval(model.loss.position_coef),
-        "loss_koef_size_coef": K.eval(model.loss.size_coef),
+        "parameters": {
+            "learning_rate": K.eval(model.optimizer.lr),
+            "epochs": epochs,
+            "batch_size": batch_size,
+            "loss_koef_negative_box": K.eval(model.loss.negative_box_coef),
+            "loss_koef_position": K.eval(model.loss.position_coef),
+            "loss_koef_size_coef": K.eval(model.loss.size_coef)
+        }
     }
-    log_json = json.dumps(log_dict)
+    log_json = json.dumps(str(log_dict))
+    #print(log_json)
     
-    path_json = '../../logs/log.json'
+    script_dir = os.path.dirname(__file__)
+    print(script_dir)
+    rel_path = "../../logs/log.json"
+    path_json = os.path.join(script_dir, rel_path)
+    print(path_json)
+    #path_json = '/NN_project/logs/log.json'
+    
     with open(path_json) as file_json:
         json_log_file = json.load(file_json)
     
