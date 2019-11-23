@@ -134,20 +134,9 @@ def create_and_fit(data, epochs, batch_size, val_split=0.1, **kwargs):
     script_dir = os.path.dirname(__file__)
     rel_path = "../../logs/log.json"
     path_json = os.path.join(script_dir, rel_path)
-    
-    ###delete me
-    with open(path_json, 'w') as file_json:
-        json.dump(log_json, file_json)
-    ###
 
-    #with open(path_json) as file_json:
-        #json_logs_from_file = json.load(file_json)
-    #print(json_logs_from_file)
-    
-    #json_logs_from_file.append(log_json)
-    
-    #with open(path_json, 'w') as file_json:
-    #    json.dump(json_logs_from_file, file_json)
+    with open(path_json, 'a+') as file_json:
+        json.dump(log_json, file_json)
 
     if not os.path.exists('models'):
         os.makedirs('models')
