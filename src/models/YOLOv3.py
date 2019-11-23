@@ -6,6 +6,8 @@ from src.models.DataGen import DataGenGrid
 from src.models.losses import SumSquaredLoss
 from src.models.metrics import precision, recall
 from tensorflow.keras import backend as K
+from tensorflow.keras.callbacks import History
+history = History()
 from src.data.VOC2012.data import classes
 from datetime import datetime
 import os
@@ -100,10 +102,24 @@ def create_and_fit(data, epochs, batch_size, val_split=0.1, **kwargs):
     print('Logs:', log)
 
     model.compile(loss=SumSquaredLoss(negative_box_coef=0.25), metrics=[precision, recall], optimizer='adam')
-    model.fit_generator(datagen.flow_train(data),
+    history = model.fit_generator(datagen.flow_train(data),
                         epochs=epochs,
                         validation_data=datagen.flow_val(data) if val_split>0.0 else None,
                         callbacks=callbacks,
                         **kwargs
                        )
+    
+    log_dict = {
+        "log_name": log,
+        "learning_rate": K.eval(model.optimizer.lr),
+        "epochs": epochs,
+        "batch_size": batch_size,
+        "loss_koef_negative_box": K.eval(model.loss.negative_box_coef),
+        "loss_koef_position": K.eval(model.loss.position_coef),
+        "loss_koef_size_coef": K.eval(model.loss.size_coef),
+        "loss": history.history['loss'],
+        "precision": history.history['precision']
+    }
+    print(log_dict)
+    
     return model
