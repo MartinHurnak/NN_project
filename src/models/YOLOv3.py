@@ -1,6 +1,7 @@
 from tensorflow import keras
 from tensorflow.keras.layers import Conv2D, add, Activation, GlobalAveragePooling2D, Dense, concatenate, Concatenate, \
     BatchNormalization, GlobalMaxPooling2D, MaxPooling2D, Reshape
+import shutil
 import config
 from src.models.DataGen import DataGenGrid
 from src.models.losses import SumSquaredLoss
@@ -92,13 +93,13 @@ def create_model(num_classes):
     return model
 
 
-def create_and_fit(data, epochs, batch_size, val_split=0.1, **kwargs):
+def create_fit_evaluate(data, epochs, batch_size, val_split=0.1, **kwargs):
     datagen = DataGenGrid(batch_size=batch_size, input_size=(256, 256), validation_split=val_split)
 
     K.clear_session()
     model = create_model(len(classes))
 
-    log = datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+    log = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
     callbacks = [
         keras.callbacks.TensorBoard(
             log_dir=os.path.join("logs/TensorBoard", log),
@@ -108,35 +109,51 @@ def create_and_fit(data, epochs, batch_size, val_split=0.1, **kwargs):
     ]
     print('Logs:', log)
 
+    optimizer = 'adam'
     model.compile(loss=SumSquaredLoss(negative_box_coef=kwargs['neg_box_coef'], size_coef=kwargs['size_coef'],
                                       position_coef=kwargs['position_coef']), metrics=[precision, recall],
-                  optimizer='adam')
+                  optimizer=optimizer)
 
     history = model.fit_generator(datagen.flow_train(data),
                                   epochs=epochs,
                                   validation_data=datagen.flow_val(data) if val_split > 0.0 else None,
                                   callbacks=callbacks
                                   )
+    val_metrics = {}
+    if val_split > 0:
+        evaluation = model.evaluate_generator(datagen.flow_val(data))
+        for k,v in zip (model.metrics_names, evaluation):
+            val_metrics[k] = float(v)
+
+
 
     log_dict = {
         "log_name": log,
         "parameters": {
-            "learning_rate": K.eval(model.optimizer.lr),
+            "optimizer":optimizer,
+            "learning_rate": float(K.eval(model.optimizer.lr)),
             "epochs": epochs,
             "batch_size": batch_size,
-            "loss_koef_negative_box": K.eval(model.loss.negative_box_coef),
-            "loss_koef_position": K.eval(model.loss.position_coef),
-            "loss_koef_size_coef": K.eval(model.loss.size_coef)
-        }
+            "loss_koef_negative_box": kwargs['neg_box_coef'],
+            "loss_koef_position": kwargs['position_coef'],
+            "loss_koef_size_coef": kwargs['size_coef']
+        },
+        'val_metrics': val_metrics
     }
-    log_json = json.dumps(str(log_dict))
+
+
     
     script_dir = os.path.dirname(__file__)
     rel_path = "../../logs/log.json"
     path_json = os.path.join(script_dir, rel_path)
 
     with open(path_json, 'a+') as file_json:
-        json.dump(log_json, file_json)
+        file_json.write(json.dumps(log_dict))
+        file_json.write('\n')
+
+    config_src = os.path.join(script_dir, '../../config.py')
+    config_dst = os.path.join(os.path.join(script_dir, '../../logs/configs'), log + '.py')
+    shutil.copy(config_src, config_dst)
 
     if not os.path.exists('models'):
         os.makedirs('models')
