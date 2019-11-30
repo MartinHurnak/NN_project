@@ -5,7 +5,7 @@ os.chdir('/NN_project')
 sys.path.append("/NN_project")
 
 import pandas as pd
-from src.models.YOLOv3 import create_and_fit
+from src.models.YOLOv3 import create_fit_evaluate
 import config
 import argparse
 
@@ -23,5 +23,5 @@ args = parser.parse_args()
 
 pickle_file = 'data/preprocessed/VOC2012/preprocessed_train.pkl'
 df = pd.read_pickle(pickle_file)
-model = create_and_fit(df, epochs=args.epochs, batch_size=args.batch_size, verbose=1, val_split=args.val_split,
+model = create_fit_evaluate(df, epochs=args.epochs, batch_size=args.batch_size, verbose=1, val_split=args.val_split,
                        neg_box_coef=args.neg_box_coef, position_coef=args.pos_coef, size_coef=args.size_coef)
