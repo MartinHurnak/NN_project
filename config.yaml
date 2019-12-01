@@ -2,7 +2,9 @@ batch_size: 64
 epochs: 30
 input_size: (256,256)
 conv_base_size: 8
+dense_size: 1024
 yolo_layers: [2, 2, 2, 2]
+batch_normalization: True
 loss:
   neg_box_coef: 0.5
   size_coef: 5

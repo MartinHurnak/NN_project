@@ -15,8 +15,10 @@ class Config:
 
             self.INPUT_SIZE = cfg['input_size']
             self.CONV_BASE_SIZE = kwargs['conv_base_size'] if 'conv_base_size' in kwargs and kwargs['conv_base_size'] else cfg['conv_base_size']
-
-            self.CONV_ACTIVATION = keras.layers.LeakyReLU(0.1)
+            self.DENSE_SIZE = kwargs['dense_size'] if 'dense_size' in kwargs and kwargs['dense_size'] else cfg['dense_size']
+            self.ACTIVATION = keras.layers.LeakyReLU(0.1)
+            self.BATCH_NORMALIZATION = kwargs['batch_normalization'] if 'batch_normalization' in kwargs and kwargs['batch_normalization'] else cfg[
+                'batch_normalization']
 
             self.YOLO_LAYERS_COUNTS = kwargs['yolo_layers'] if 'yolo_layers' in kwargs and kwargs['yolo_layers'] else cfg['yolo_layers']
 

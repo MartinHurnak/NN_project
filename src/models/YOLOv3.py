@@ -1,6 +1,6 @@
 from tensorflow import keras
 from tensorflow.keras.layers import Conv2D, add, GlobalAveragePooling2D, Dense, Concatenate, \
-    Reshape
+    Reshape, BatchNormalization
 import shutil
 from src.models.DataGen import DataGenGrid
 from src.models.losses import SumSquaredLoss
@@ -12,17 +12,22 @@ import json
 
 
 class YoloLayer(keras.layers.Layer):
-    def __init__(self, filters_1, filters_2, activation='relu', **kwargs):
+    def __init__(self, filters_1, filters_2, activation='relu', batch_normalization=True ** kwargs):
         super(YoloLayer, self).__init__(**kwargs)
         self.filters_1 = filters_1
         self.filters_2 = filters_2
         self.activation = activation
         self.conv_1 = Conv2D(filters_1, (1, 1), activation=activation, padding='same')
         self.conv_2 = Conv2D(filters_2, (3, 3), activation=activation, padding='same')
+        self.batch_normalization = batch_normalization
 
     def call(self, x):
         l = self.conv_1(x)
+        if self.batch_normalization:
+            l = BatchNormalization()(l)
         l = self.conv_2(l)
+        if self.batch_normalization:
+            l = BatchNormalization()(l)
         l = add([x, l])
         return l
 
@@ -38,38 +43,40 @@ class YoloLayer(keras.layers.Layer):
 def create_model(config):
     input = keras.layers.Input(shape=(256, 256, 3,))
     model_layers = [
-        Conv2D(config.CONV_BASE_SIZE, (3, 3), padding='same', activation=config.CONV_ACTIVATION),
-        Conv2D(2 * config.CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=config.CONV_ACTIVATION),
-        YoloLayer(config.CONV_BASE_SIZE, 2 * config.CONV_BASE_SIZE, activation=config.CONV_ACTIVATION),
-        Conv2D(4 * config.CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=config.CONV_ACTIVATION),
+        Conv2D(config.CONV_BASE_SIZE, (3, 3), padding='same', activation=config.ACTIVATION),
+        Conv2D(2 * config.CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=config.ACTIVATION),
+        YoloLayer(config.CONV_BASE_SIZE, 2 * config.CONV_BASE_SIZE, activation=config.ACTIVATION,
+                  batch_normalization=config.BATCH_NORMALIZATION),
+        Conv2D(4 * config.CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=config.ACTIVATION),
 
     ]
     model_layers += [YoloLayer(2 * config.CONV_BASE_SIZE, 4 * config.CONV_BASE_SIZE,
-                               activation=config.CONV_ACTIVATION)] * \
+                               activation=config.ACTIVATION, batch_normalization=config.BATCH_NORMALIZATION)] * \
                     config.YOLO_LAYERS_COUNTS[0]
     model_layers.append(
-        Conv2D(8 * config.CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=config.CONV_ACTIVATION))
+        Conv2D(8 * config.CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=config.ACTIVATION))
     model_layers += [YoloLayer(2 * config.CONV_BASE_SIZE, 8 * config.CONV_BASE_SIZE,
-                               activation=config.CONV_ACTIVATION)] * \
+                               activation=config.ACTIVATION, batch_normalization=config.BATCH_NORMALIZATION)] * \
                     config.YOLO_LAYERS_COUNTS[1]
     model_layers.append(
-        Conv2D(16 * config.CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=config.CONV_ACTIVATION))
+        Conv2D(16 * config.CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=config.ACTIVATION))
     model_layers += [YoloLayer(8 * config.CONV_BASE_SIZE, 16 * config.CONV_BASE_SIZE,
-                               activation=config.CONV_ACTIVATION)] * \
+                               activation=config.ACTIVATION, batch_normalization=config.BATCH_NORMALIZATION)] * \
                     config.YOLO_LAYERS_COUNTS[2]
     model_layers.append(
-        Conv2D(32 * config.CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=config.CONV_ACTIVATION))
+        Conv2D(32 * config.CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=config.ACTIVATION))
     model_layers += [YoloLayer(16 * config.CONV_BASE_SIZE, 32 * config.CONV_BASE_SIZE,
-                               activation=config.CONV_ACTIVATION)] * \
+                               activation=config.ACTIVATION, batch_normalization=config.BATCH_NORMALIZATION)] * \
                     config.YOLO_LAYERS_COUNTS[3]
-    model_layers += [
-        GlobalAveragePooling2D(),
-        Dense(4096, activation=config.CONV_ACTIVATION)
-    ]
 
     x = input
     for layer in model_layers:
         x = layer(x)
+        if config.BATCH_NORMALIZATION:
+            x = BatchNormalization()(x)
+
+    x = GlobalAveragePooling2D()(x)
+    x = Dense(config.DENSE_SIZE, activation=config.ACTIVATION)(x)
 
     output = []
     for i in range(config.GRID_SIZE[0]):
