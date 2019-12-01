@@ -1,11 +1,7 @@
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from config import BATCH_SIZE, VALIDATION_SPLIT
-from config import INPUT_SIZE
-from src.data.VOC2012.data import grid_columns
-
 
 class DataGenGrid:
-    def __init__(self, batch_size=BATCH_SIZE, input_size=INPUT_SIZE, validation_split=VALIDATION_SPLIT):
+    def __init__(self, batch_size=64, input_size=(256,256), validation_split=0.1):
         self.datagen = ImageDataGenerator(validation_split=validation_split, rescale=1.0 / 255.0)
         self.batch_size = batch_size
         self.input_size = input_size

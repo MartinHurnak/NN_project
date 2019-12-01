@@ -1,6 +1,5 @@
 from tensorflow.keras.losses import Loss
 from tensorflow.keras import backend as K
-from config import GRID_SIZE
 from src.helpers import intersection_over_union
 
 class SumSquaredLoss(Loss):
@@ -8,7 +7,7 @@ class SumSquaredLoss(Loss):
     Inspired by https://fairyonice.github.io/Part_4_Object_Detection_with_Yolo_using_VOC_2012_data_loss.html
     '''
 
-    def __init__(self, grid_size=GRID_SIZE, negative_box_coef=0.25, position_coef=5, size_coef=5):
+    def __init__(self, grid_size=None, negative_box_coef=0.25, position_coef=5, size_coef=5):
         super(SumSquaredLoss, self).__init__()
 
         self.grid_size = grid_size

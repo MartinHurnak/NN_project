@@ -2,8 +2,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, Circle
 import os
-from src.data.VOC2012.data import class_encoder
-from config import GRID_SIZE
+from src.config import GRID_SIZE
 
 
 def plot_grid(data, df_id, prediction, plot_ground_truth=True, highlight_fp=False, plot_fn=False, default_color='g', linewidth=3):

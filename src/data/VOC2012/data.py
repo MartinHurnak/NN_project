@@ -1,5 +1,5 @@
 from sklearn import preprocessing
-from config import GRID_SIZE
+from src.config import GRID_SIZE
 
 classes = ['aeroplane',
            'bicycle',

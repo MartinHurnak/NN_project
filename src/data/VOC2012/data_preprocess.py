@@ -5,7 +5,8 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.utils import to_categorical
 from src.helpers import get_center_size
 from sklearn.model_selection import train_test_split
-import config
+from src import config
+
 
 def _create_output(d, img_width, img_height):
     cls = d['name']
@@ -83,7 +84,7 @@ def _create_grid(row):
             if len(objects)==0:
                 objects.append(np.zeros(5))
                 #objects.append(np.zeros(5+len(classes)))
-            row['grid_' + str(i) + '_' + str(j)] = pad_sequences([objects],maxlen=config.GRID_CELL_BOXES, dtype='float32', padding='post', truncating='post')
+            row['grid_' + str(i) + '_' + str(j)] = pad_sequences([objects], maxlen=config.GRID_CELL_BOXES, dtype='float32', padding='post', truncating='post')
     return row
 
 def preprocess(data):

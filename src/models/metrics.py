@@ -1,7 +1,7 @@
 import tensorflow.keras.backend as K
-from config import GRID_SIZE
+from src.config import Config
 from src.helpers import intersection_over_union
-import numpy as np
+
 
 def recall(y_true, y_pred, threshold=0.5):
     tp = true_positives(y_true, y_pred, threshold)
@@ -44,7 +44,7 @@ def true_positives(y_true, y_pred, threshold=0.5):
     pred_box_h = y_pred[..., 3]
     pred_box_conf = y_pred[..., 4]
 
-    iou = intersection_over_union(GRID_SIZE, pred_box_x, pred_box_y, pred_box_w, pred_box_h,
+    iou = intersection_over_union(Config.GRID_SIZE, pred_box_x, pred_box_y, pred_box_w, pred_box_h,
                                   true_box_x, true_box_y,
                                   true_box_w,true_box_h)
     tp = K.cast(K.greater(iou, 0.5 * K.ones_like(iou)), K.floatx()) * (

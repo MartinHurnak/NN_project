@@ -1,20 +1,18 @@
 from tensorflow import keras
-from tensorflow.keras.layers import Conv2D, add, Activation, GlobalAveragePooling2D, Dense, concatenate, Concatenate, \
-    BatchNormalization, GlobalMaxPooling2D, MaxPooling2D, Reshape
+from tensorflow.keras.layers import Conv2D, add, GlobalAveragePooling2D, Dense, Concatenate, \
+    Reshape
 import shutil
-import config
 from src.models.DataGen import DataGenGrid
 from src.models.losses import SumSquaredLoss
 from src.models.metrics import precision, recall
 from tensorflow.keras import backend as K
-from src.data.VOC2012.data import classes
 from datetime import datetime
 import os
 import json
 
 
 class YoloLayer(keras.layers.Layer):
-    def __init__(self, filters_1, filters_2, activation=config.CONV_ACTIVATION, **kwargs):
+    def __init__(self, filters_1, filters_2, activation='relu', **kwargs):
         super(YoloLayer, self).__init__(**kwargs)
         self.filters_1 = filters_1
         self.filters_2 = filters_2
@@ -37,7 +35,7 @@ class YoloLayer(keras.layers.Layer):
         return dict(list(base_config.items()) + list(new_config.items()))
 
 
-def create_model(num_classes):
+def create_model(config):
     input = keras.layers.Input(shape=(256, 256, 3,))
     model_layers = [
         Conv2D(config.CONV_BASE_SIZE, (3, 3), padding='same', activation=config.CONV_ACTIVATION),
@@ -93,11 +91,11 @@ def create_model(num_classes):
     return model
 
 
-def create_fit_evaluate(data, epochs, batch_size, val_split=0.1, **kwargs):
-    datagen = DataGenGrid(batch_size=batch_size, input_size=(256, 256), validation_split=val_split)
+def create_fit_evaluate(data, config, **kwargs):
+    datagen = DataGenGrid(batch_size=config.BATCH_SIZE, input_size=(256, 256), validation_split=config.VALIDATION_SPLIT)
 
     K.clear_session()
-    model = create_model(len(classes))
+    model = create_model(config)
 
     log = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
     callbacks = [
@@ -110,39 +108,36 @@ def create_fit_evaluate(data, epochs, batch_size, val_split=0.1, **kwargs):
     print('Logs:', log)
 
     optimizer = 'adam'
-    model.compile(loss=SumSquaredLoss(negative_box_coef=kwargs['neg_box_coef'], size_coef=kwargs['size_coef'],
-                                      position_coef=kwargs['position_coef']), metrics=[precision, recall],
+    model.compile(loss=SumSquaredLoss(grid_size=config.GRID_SIZE, negative_box_coef=config.LOSS_NEGATIVE_BOX_COEF,
+                                      size_coef=config.LOSS_SIZE_COEF,
+                                      position_coef=config.LOSS_POSITION_COEF), metrics=[precision, recall],
                   optimizer=optimizer)
 
     history = model.fit_generator(datagen.flow_train(data),
-                                  epochs=epochs,
-                                  validation_data=datagen.flow_val(data) if val_split > 0.0 else None,
+                                  epochs=config.EPOCHS,
+                                  validation_data=datagen.flow_val(data) if config.VALIDATION_SPLIT > 0.0 else None,
                                   callbacks=callbacks
                                   )
     val_metrics = {}
-    if val_split > 0:
+    if config.VALIDATION_SPLIT > 0:
         evaluation = model.evaluate_generator(datagen.flow_val(data))
-        for k,v in zip (model.metrics_names, evaluation):
+        for k, v in zip(model.metrics_names, evaluation):
             val_metrics[k] = float(v)
-
-
 
     log_dict = {
         "log_name": log,
         "parameters": {
-            "optimizer":optimizer,
+            "optimizer": optimizer,
             "learning_rate": float(K.eval(model.optimizer.lr)),
-            "epochs": epochs,
-            "batch_size": batch_size,
-            "loss_koef_negative_box": kwargs['neg_box_coef'],
-            "loss_koef_position": kwargs['position_coef'],
-            "loss_koef_size_coef": kwargs['size_coef']
+            "epochs": config.EPOCHS,
+            "batch_size": config.BATCH_SIZE,
+            "loss_koef_negative_box": config.LOSS_NEGATIVE_BOX_COEF,
+            "loss_koef_position": config.LOSS_POSITION_COEF,
+            "loss_koef_size_coef": config.LOSS_SIZE_COEF
         },
         'val_metrics': val_metrics
     }
 
-
-    
     script_dir = os.path.dirname(__file__)
     rel_path = "../../logs/log.json"
     path_json = os.path.join(script_dir, rel_path)
@@ -151,8 +146,8 @@ def create_fit_evaluate(data, epochs, batch_size, val_split=0.1, **kwargs):
         file_json.write(json.dumps(log_dict))
         file_json.write('\n')
 
-    config_src = os.path.join(script_dir, '../../config.py')
-    config_dst = os.path.join(os.path.join(script_dir, '../../logs/configs'), log + '.py')
+    config_src = os.path.join(script_dir, '../../config.yaml')
+    config_dst = os.path.join(os.path.join(script_dir, '../../logs/configs'), log + '.yaml')
     shutil.copy(config_src, config_dst)
 
     if not os.path.exists('models'):
