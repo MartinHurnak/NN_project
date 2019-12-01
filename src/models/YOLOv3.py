@@ -12,7 +12,7 @@ import json
 
 
 class YoloLayer(keras.layers.Layer):
-    def __init__(self, filters_1, filters_2, activation='relu', batch_normalization=True ** kwargs):
+    def __init__(self, filters_1, filters_2, activation='relu', batch_normalization=True, **kwargs):
         super(YoloLayer, self).__init__(**kwargs)
         self.filters_1 = filters_1
         self.filters_2 = filters_2
