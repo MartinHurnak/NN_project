@@ -17,6 +17,9 @@ class Config:
             self.CONV_BASE_SIZE = kwargs['conv_base_size'] if 'conv_base_size' in kwargs and kwargs['conv_base_size'] else cfg['conv_base_size']
             self.DENSE_SIZE = kwargs['dense_size'] if 'dense_size' in kwargs and kwargs['dense_size'] else cfg['dense_size']
             self.ACTIVATION = keras.layers.LeakyReLU(0.1)
+            self.L1 = kwargs['l1'] if 'l1' in kwargs and kwargs['l1'] else cfg['regularization']['l1']
+            self.L2 = kwargs['l2'] if 'l2' in kwargs and kwargs['l2'] else cfg['regularization']['l2']
+            self.REGULARIZER = keras.regularizers.l1_l2(l1=self.L1, l2=self.L2)
             self.BATCH_NORMALIZATION = kwargs['batch_normalization'] if 'batch_normalization' in kwargs and kwargs['batch_normalization'] else cfg[
                 'batch_normalization']
 

@@ -9,5 +9,8 @@ loss:
   neg_box_coef: 0.5
   size_coef: 5
   position_coef: 5
+regularization:
+  l1: 0
+  l2: 0.001
 train_test_split: 0.1
 validation_split: 0.1
