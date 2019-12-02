@@ -148,12 +148,12 @@ def create_fit_evaluate(data, config, **kwargs):
         "parameters": {
             "optimizer": config.OPTIMIZER.get_config(),
             "learning_rate": float(K.eval(model.optimizer.lr)),
-            "epochs": config.EPOCHS,
-            "batch_size": config.BATCH_SIZE,
-            "loss_koef_negative_box": config.LOSS_NEGATIVE_BOX_COEF,
-            "loss_koef_position": config.LOSS_POSITION_COEF,
-            "loss_koef_size_coef": config.LOSS_SIZE_COEF,
-            "batch_normalization": config.BATCH_NORMALIZATION,
+            "epochs": int(config.EPOCHS),
+            "batch_size": int(config.BATCH_SIZE),
+            "loss_koef_negative_box": float(config.LOSS_NEGATIVE_BOX_COEF),
+            "loss_koef_position": float(config.LOSS_POSITION_COEF),
+            "loss_koef_size_coef": float(config.LOSS_SIZE_COEF),
+            "batch_normalization": bool(config.BATCH_NORMALIZATION),
             "regularization": config.REGULARIZER.get_config()
         },
         'val_metrics': val_metrics
