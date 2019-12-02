@@ -147,7 +147,7 @@ def create_fit_evaluate(data, config, **kwargs):
     log_dict = {
         "log_name": log,
         "parameters": {
-            "optimizer": optimizer,
+            "optimizer": config.OPTIMIZER.get_config(),
             "learning_rate": float(K.eval(model.optimizer.lr)),
             "epochs": config.EPOCHS,
             "batch_size": config.BATCH_SIZE,

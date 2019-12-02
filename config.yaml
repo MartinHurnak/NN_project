@@ -1,16 +1,18 @@
 batch_size: 64
 epochs: 30
 input_size: (256,256)
-conv_base_size: 8
+conv_base_size: 32
 dense_size: 1024
-yolo_layers: [2, 4, 4, 2]
+yolo_layers: [2, 2, 2, 2]
 batch_normalization: True
+optimizer: 'adam'
+learning_rate: 0.001
 loss:
   neg_box_coef: 0.5
   size_coef: 5
   position_coef: 5
 regularization:
   l1: 0
-  l2: 0.001
+  l2: 0.0001
 train_test_split: 0.1
 validation_split: 0.1

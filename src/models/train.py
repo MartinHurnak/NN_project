@@ -16,13 +16,14 @@ parser.add_argument('--val_split', nargs='?', help='Train/Validation split', typ
 parser.add_argument('--neg_box_coef', nargs='?', help='Constant for loss function', type=float)
 parser.add_argument('--size_coef', nargs='?', help='Constant for loss function', type=float)
 parser.add_argument('--pos_coef', nargs='?', help='Constant for loss function', type=float)
+parser.add_argument('--lr', nargs='?', help='Learning rate', type=float)
 parser.add_argument('--config', nargs='?', help='Config YAML file', type=str,
                     default='config.yaml')
 args = parser.parse_args()
 
 
 config = Config(args.config, epochs=args.epochs, batch_size=args.batch_size, val_split=args.val_split,
-                       neg_box_coef=args.neg_box_coef, position_coef=args.pos_coef, size_coef=args.size_coef)
+                       neg_box_coef=args.neg_box_coef, position_coef=args.pos_coef, size_coef=args.size_coef, learning_rate=args.lr)
 
 pickle_file = 'data/preprocessed/VOC2012/preprocessed_train.pkl'
 df = pd.read_pickle(pickle_file)
