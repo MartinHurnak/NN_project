@@ -127,11 +127,10 @@ def create_fit_evaluate(data, config, **kwargs):
     ]
     print('Logs:', log)
 
-    optimizer = 'adam'
     model.compile(loss=SumSquaredLoss(grid_size=config.GRID_SIZE, negative_box_coef=config.LOSS_NEGATIVE_BOX_COEF,
                                       size_coef=config.LOSS_SIZE_COEF,
                                       position_coef=config.LOSS_POSITION_COEF), metrics=[precision, recall],
-                  optimizer=optimizer)
+                  optimizer=config.OPTIMIZER)
 
     history = model.fit_generator(datagen.flow_train(data),
                                   epochs=config.EPOCHS,
