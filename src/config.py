@@ -34,6 +34,9 @@ class Config:
             self.TRAIN_TEST_SPLIT =  kwargs['train_test_split'] if 'train_test_split' in kwargs  and kwargs['train_test_split'] else cfg['train_test_split']
             self.VALIDATION_SPLIT = kwargs['validation_split'] if 'validation_split' in kwargs and kwargs['validation_split']  else cfg['validation_split']
 
+            print(vars(self))
+
+
 
 
             #self.SEQUENCE_LENGTH = 5
