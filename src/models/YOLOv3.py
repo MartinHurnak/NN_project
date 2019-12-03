@@ -122,7 +122,6 @@ def create_fit_evaluate(data, config, **kwargs):
         keras.callbacks.TensorBoard(
             log_dir=os.path.join("logs/TensorBoard", log),
             histogram_freq=1,
-            update_freq='batch',
             profile_batch=0)
     ]
     print('Logs:', log)
