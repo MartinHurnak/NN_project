@@ -22,7 +22,7 @@ parser.add_argument('--config', nargs='?', help='Config YAML file', type=str,
 args = parser.parse_args()
 
 
-config = Config(args.config, epochs=args.epochs, batch_size=args.batch_size, val_split=args.val_split,
+config = Config(args.config, epochs=args.epochs, batch_size=args.batch_size, validation_split=args.val_split,
                        neg_box_coef=args.neg_box_coef, position_coef=args.pos_coef, size_coef=args.size_coef, learning_rate=args.lr)
 
 pickle_file = 'data/preprocessed/VOC2012/preprocessed_train.pkl'
