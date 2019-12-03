@@ -110,6 +110,12 @@ def create_model(config):
 
     return model
 
+def schedule_lr(epoch, lr):
+    if epoch == 5:
+        return lr*10
+    elif epoch == 20:
+        return lr/10.0
+    return lr
 
 def create_fit_evaluate(data, config, **kwargs):
     datagen = DataGenGrid(batch_size=config.BATCH_SIZE, input_size=(256, 256), validation_split=config.VALIDATION_SPLIT)
@@ -122,7 +128,8 @@ def create_fit_evaluate(data, config, **kwargs):
         keras.callbacks.TensorBoard(
             log_dir=os.path.join("logs/TensorBoard", log),
             histogram_freq=1,
-            profile_batch=0)
+            profile_batch=0),
+        keras.callbacks.LearningRateScheduler(schedule_lr, verbose=1)
     ]
     print('Logs:', log)
 
