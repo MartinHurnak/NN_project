@@ -152,7 +152,8 @@ def create_fit_evaluate(data, config, **kwargs):
     log_dict = {
         "log_name": log,
         "parameters": {
-            "optimizer": config.OPTIMIZER.get_config(),
+            "optimizer": str(config.OPTIMIZER.get_config()['name']),
+            "learning_rate": float(config.OPTIMIZER.get_config()['learning_rate']),
             "epochs": int(config.EPOCHS),
             "batch_size": int(config.BATCH_SIZE),
             "loss_koef_negative_box": float(config.LOSS_NEGATIVE_BOX_COEF),
@@ -163,7 +164,7 @@ def create_fit_evaluate(data, config, **kwargs):
         },
         'val_metrics': val_metrics
     }
-
+    print(log_dict)
     script_dir = os.path.dirname(__file__)
     rel_path = "../../logs/log.json"
     path_json = os.path.join(script_dir, rel_path)
