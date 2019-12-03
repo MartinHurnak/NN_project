@@ -12,7 +12,7 @@ import argparse
 parser = argparse.ArgumentParser(prog='Train')
 parser.add_argument('--epochs', nargs='?', help='Number of epochs for fit', type=int)
 parser.add_argument('--batch_size', nargs='?', help='Batch size', type=int)
-parser.add_argument('--val_split', nargs='?', help='Train/Validation split', type=int)
+parser.add_argument('--val_split', nargs='?', help='Train/Validation split', type=float)
 parser.add_argument('--neg_box_coef', nargs='?', help='Constant for loss function', type=float)
 parser.add_argument('--size_coef', nargs='?', help='Constant for loss function', type=float)
 parser.add_argument('--pos_coef', nargs='?', help='Constant for loss function', type=float)
