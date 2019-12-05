@@ -110,12 +110,14 @@ def create_model(config):
 
     return model
 
+
 def schedule_lr(epoch, lr):
-    if epoch == 5:
-        return lr*10
-    elif epoch == 20:
-        return lr/10.0
+    if epoch in [5, 10, 15]:
+        return lr * 2
+    elif epoch in [30, 35, 40]:
+        return lr / 2.0
     return lr
+
 
 def create_fit_evaluate(data, config, **kwargs):
     datagen = DataGenGrid(batch_size=config.BATCH_SIZE, input_size=(256, 256), validation_split=config.VALIDATION_SPLIT)
