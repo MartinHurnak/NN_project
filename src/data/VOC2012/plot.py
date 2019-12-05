@@ -2,10 +2,9 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, Circle
 import os
-from src.config import GRID_SIZE
 
 
-def plot_grid(data, df_id, prediction, plot_ground_truth=True, highlight_fp=False, plot_fn=False, default_color='g', linewidth=3):
+def plot_grid(data, df_id, prediction, config, plot_ground_truth=True, highlight_fp=False, plot_fn=False, default_color='g', linewidth=3):
     im = Image.open(os.path.join('data/raw/VOC2012/JPEGImages', data['filename'][df_id]))
 
     plt.imshow(im)
@@ -15,14 +14,14 @@ def plot_grid(data, df_id, prediction, plot_ground_truth=True, highlight_fp=Fals
     img_width = data['width'][df_id]
     img_height = data['height'][df_id]
 
-    cell_w = img_width // GRID_SIZE[0]
-    cell_h = img_height // GRID_SIZE[1]
+    cell_w = img_width // config.GRID_SIZE[0]
+    cell_h = img_height // config.GRID_SIZE[1]
 
-    for i in range(GRID_SIZE[0]):
+    for i in range(config.GRID_SIZE[0]):
 
         ax.axvline(i * cell_w, linestyle='--', color='k')  # vertical lines
-        for j in range(GRID_SIZE[1]):
-            pred = prediction[i * GRID_SIZE[0] + j]
+        for j in range(config.GRID_SIZE[1]):
+            pred = prediction[i * config.GRID_SIZE[0] + j]
 
             boxes_coord = pred[0:2]
             boxes_size = pred[2:4]
