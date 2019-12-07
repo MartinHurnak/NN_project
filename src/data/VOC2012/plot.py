@@ -2,7 +2,8 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, Circle
 import os
-
+import numpy as np
+import tensorflow as tf
 
 def plot_grid(data, df_id, prediction, config, plot_ground_truth=True, highlight_fp=False, plot_fn=False, default_color='g', linewidth=3):
     im = Image.open(os.path.join('data/raw/VOC2012/JPEGImages', data['filename'][df_id]))
@@ -16,6 +17,7 @@ def plot_grid(data, df_id, prediction, config, plot_ground_truth=True, highlight
 
     cell_w = img_width // config.GRID_SIZE[0]
     cell_h = img_height // config.GRID_SIZE[1]
+
 
     for i in range(config.GRID_SIZE[0]):
 
@@ -80,4 +82,82 @@ def plot_grid(data, df_id, prediction, config, plot_ground_truth=True, highlight
                     ax.add_patch(c)
                     ax.add_patch(rect_pred)
 
+def plot_grid_nms(data, df_id, prediction, config, plot_ground_truth=True, plot_grid=True, linewidth=3, conf_threshold=0.5):
+    im = Image.open(os.path.join('data/raw/VOC2012/JPEGImages', data['filename'][df_id]))
 
+    plt.imshow(im)
+    # Get the current reference
+    ax = plt.gca()
+
+    img_width = data['width'][df_id]
+    img_height = data['height'][df_id]
+
+    cell_w = img_width // config.GRID_SIZE[0]
+    cell_h = img_height // config.GRID_SIZE[1]
+
+
+    boxes_coords = np.zeros_like(prediction[..., 0:4])
+    for i in range(config.GRID_SIZE[0]):
+        for j in range(config.GRID_SIZE[1]):
+            boxes_coords[..., 0] = (prediction[..., 0] + i)  / config.GRID_SIZE[0]
+            boxes_coords[..., 1] = (prediction[..., 1] + j) / config.GRID_SIZE[1]
+            boxes_coords[..., 2] = boxes_coords[..., 0] + prediction[..., 2]
+            boxes_coords[..., 3] = boxes_coords[..., 1] + prediction[..., 3]
+
+    nms_indices = tf.image.non_max_suppression(boxes_coords, prediction[..., 4], max_output_size = config.GRID_SIZE[0]*config.GRID_SIZE[1], score_threshold=conf_threshold)
+
+    for i in range(config.GRID_SIZE[0]):
+
+        if plot_grid: ax.axvline(i * cell_w, linestyle='--', color='k')  # vertical lines
+        for j in range(config.GRID_SIZE[1]):
+            pred = prediction[i * config.GRID_SIZE[0] + j]
+
+            boxes_coord = pred[0:2]
+            boxes_size = pred[2:4]
+            obj = pred[4]
+            # cls = pred[5:]
+            true = data['grid_' + str(i) + '_' + str(j)][df_id][0][0]
+            is_obj = true[4]
+
+            if (is_obj == 1) and plot_ground_truth:
+                width = true[2]
+                height = true[3]
+
+                x = true[0] * cell_w + i * cell_w
+                y = true[1] * cell_h + j * cell_h
+
+                width *= img_width
+                height *= img_height
+                xmin = x - width / 2
+                ymin = y - height / 2
+
+                rect_true = Rectangle((xmin, ymin), width, height, fill=False,
+                                  linewidth=2, edgecolor='b')
+                c = Circle((x, y), radius=3, color='b')
+                ax.add_patch(c)
+                ax.add_patch(rect_true)
+
+            if plot_grid: ax.axhline(j * cell_h, linestyle='--', color='k')  # horizontal lines
+
+            if (i * config.GRID_SIZE[0] + j) in nms_indices:
+
+                width = boxes_size[0]
+                height = boxes_size[1]
+
+                x = boxes_coord[0] * cell_w + i * cell_w
+                y = boxes_coord[1] * cell_h + j * cell_h
+
+                width *= img_width
+                height *= img_height
+                xmin = x - width / 2
+                ymin = y - height / 2
+
+                # print(xmin, ymin, width, height )
+                rect_pred = Rectangle((xmin, ymin), width, height, fill=False, linewidth=linewidth,
+                                 edgecolor='r')
+                # plt.text(xmin, ymin, str(class_encoder.inverse_transform([np.argmax(cls)])[0]) + '_' + str(
+                #    round(cls[np.argmax(cls)], 2)), bbox=dict(facecolor='red', alpha=0.5))
+                plt.text(xmin, ymin, str(round(obj, 3)), bbox=dict(facecolor='r', alpha=0.5))
+                c = Circle((x, y), radius=3, color='r')
+                ax.add_patch(c)
+                ax.add_patch(rect_pred)
