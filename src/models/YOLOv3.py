@@ -131,7 +131,9 @@ def create_fit_evaluate(data, config, **kwargs):
             log_dir=os.path.join("logs/TensorBoard", log),
             histogram_freq=1,
             profile_batch=0),
-        keras.callbacks.LearningRateScheduler(schedule_lr, verbose=1)
+        keras.callbacks.LearningRateScheduler(schedule_lr, verbose=1),
+        keras.callbacks.ModelCheckpoint('models/{}_min_loss.h5'.format(log), save_best_only=True,
+                                        save_weights_only=True)
     ]
     print('Logs:', log)
 
