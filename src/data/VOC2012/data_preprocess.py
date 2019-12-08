@@ -28,7 +28,7 @@ def _create_outputs(l, img_width, img_height):
     return [_create_output(d, img_width, img_height) for d in l if d['name']=='person'][0:10]
 
 
-def _preprocess_objects_dict(d, img_width, img_height):
+def _preprocess_objects_dict(d, img_width, img_height, config):
     cls = d['name']
 
     xmin = float(d['bndbox']['xmin'])
@@ -39,8 +39,8 @@ def _preprocess_objects_dict(d, img_width, img_height):
     x = (xmax + xmin) / 2
     y = (ymax + ymin) / 2
 
-    cell_w = img_width // GRID_SIZE[0]
-    cell_h = img_height // GRID_SIZE[1]
+    cell_w = img_width // config.GRID_SIZE[0]
+    cell_h = img_height // config.GRID_SIZE[1]
 
     anchor_x = x // cell_w
     anchor_y = y // cell_h
@@ -56,8 +56,8 @@ def _preprocess_objects_dict(d, img_width, img_height):
     return {"grid_box": (anchor_x,anchor_y), "class": cls, "is_object": [1], "bb_coords": [x, y], "bb_sizes": [w, h], 'bb_area': w * h}
 
 
-def _preprocess_objects_list(l, img_width, img_height):
-    return [_preprocess_objects_dict(d, img_width, img_height) for d in l]
+def _preprocess_objects_list(l, img_width, img_height, config):
+    return [_preprocess_objects_dict(d, img_width, img_height, config) for d in l]
 
 
 def _create_output_grid(d):
@@ -72,7 +72,7 @@ def _create_output_grid(d):
     #output = np.concatenate(([x, y, w, h, 1], cls))
     return output
 
-def _create_grid(row):
+def _create_grid(row, config):
 
     for i in range(config.GRID_SIZE[0]):
         for j in range(config.GRID_SIZE[1]):
@@ -87,7 +87,7 @@ def _create_grid(row):
             row['grid_' + str(i) + '_' + str(j)] = pad_sequences([objects], maxlen=config.GRID_CELL_BOXES, dtype='float32', padding='post', truncating='post')
     return row
 
-def preprocess(data):
+def preprocess(data,config):
     data.drop(['database', 'annotation', 'image', 'segmented'], axis=1, inplace=True)
 
     data['output'] = data.apply(
@@ -98,9 +98,9 @@ def preprocess(data):
     data['has_person'] = data['object'].apply(lambda D: np.array([(d['name'] == 'person') for d in D]).any())
 
     data['object'] = data.apply(
-        lambda x: _preprocess_objects_list(x['object'], x['width'], x['height']), axis=1)
+        lambda x: _preprocess_objects_list(x['object'], x['width'], x['height'], config), axis=1)
 
-    data = data.apply(_create_grid, axis=1)
+    data = data.apply(lambda x: _create_grid(x, config), axis=1)
 
     data['grid_output']=data[grid_columns].apply(np.hstack, axis=1)
     data = data[data['has_person']].reset_index()
@@ -114,13 +114,13 @@ def split_train_test(data, test_ratio, file_out_train, file_out_test):
     data_test.to_pickle(file_out_test)
     return data_train, data_test
 
-def load_preprocess(filename):
+def load_preprocess(filename, config):
     data = load_json(filename)
-    return preprocess(data)
+    return preprocess(data, config)
 
-def load_preprocess_save(file_in, file_out_train, file_out_test):
+def load_preprocess_save(file_in, file_out_train, file_out_test, config):
     data = load_json(file_in)
-    data = preprocess(data)
+    data = preprocess(data, config)
     data_train, data_test = split_train_test(data, config.TRAIN_TEST_SPLIT, file_out_train, file_out_test)
     return data_train, data_test
 
