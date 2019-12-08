@@ -97,15 +97,21 @@ def plot_grid_nms(data, df_id, prediction, config, plot_ground_truth=True, plot_
 
 
     boxes_coords = np.zeros_like(prediction[..., 0:4])
+
     for i in range(config.GRID_SIZE[0]):
         for j in range(config.GRID_SIZE[1]):
-            boxes_coords[..., 0] = (prediction[..., 0] + i)  / config.GRID_SIZE[0]
-            boxes_coords[..., 1] = (prediction[..., 1] + j) / config.GRID_SIZE[1]
-            boxes_coords[..., 2] = boxes_coords[..., 0] + prediction[..., 2]
-            boxes_coords[..., 3] = boxes_coords[..., 1] + prediction[..., 3]
+            pred = prediction[i*config.GRID_SIZE[0] + j]
+            w =  pred[..., 2] * config.GRID_SIZE[0]
+            h = pred[..., 3] * config.GRID_SIZE[1]
+
+            #tensorflow NMS uses (y,x) system i*config.GRID_SIZE[0]][
+            boxes_coords[..., 1] = (pred[..., 0] + i) - w/2
+            boxes_coords[..., 0] = (pred[..., 1] + j)  - h/2
+            boxes_coords[..., 3] = boxes_coords[..., 1] + w
+            boxes_coords[..., 2] = boxes_coords[..., 0] + h
+
 
     nms_indices = tf.image.non_max_suppression(boxes_coords, prediction[..., 4], max_output_size = config.GRID_SIZE[0]*config.GRID_SIZE[1], score_threshold=conf_threshold)
-
     for i in range(config.GRID_SIZE[0]):
 
         if plot_grid: ax.axvline(i * cell_w, linestyle='--', color='k')  # vertical lines
@@ -151,7 +157,6 @@ def plot_grid_nms(data, df_id, prediction, config, plot_ground_truth=True, plot_
                 height *= img_height
                 xmin = x - width / 2
                 ymin = y - height / 2
-
                 # print(xmin, ymin, width, height )
                 rect_pred = Rectangle((xmin, ymin), width, height, fill=False, linewidth=linewidth,
                                  edgecolor='r')
