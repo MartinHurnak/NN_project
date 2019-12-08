@@ -82,7 +82,7 @@ def plot_grid(data, df_id, prediction, config, plot_ground_truth=True, highlight
                     ax.add_patch(c)
                     ax.add_patch(rect_pred)
 
-def plot_grid_nms(data, df_id, prediction, config, plot_ground_truth=True, plot_grid=True, linewidth=3, conf_threshold=0.5):
+def plot_grid_nms(data, df_id, prediction, config, plot_ground_truth=True, plot_grid=True, linewidth=3, conf_threshold=0.5, iou_threshold=0.5):
     im = Image.open(os.path.join('data/raw/VOC2012/JPEGImages', data['filename'][df_id]))
 
     plt.imshow(im)
@@ -111,7 +111,7 @@ def plot_grid_nms(data, df_id, prediction, config, plot_ground_truth=True, plot_
             boxes_coords[..., 2] = boxes_coords[..., 0] + h
 
 
-    nms_indices = tf.image.non_max_suppression(boxes_coords, prediction[..., 4], max_output_size = config.GRID_SIZE[0]*config.GRID_SIZE[1], score_threshold=conf_threshold)
+    nms_indices = tf.image.non_max_suppression(boxes_coords, prediction[..., 4], max_output_size = config.GRID_SIZE[0]*config.GRID_SIZE[1], score_threshold=conf_threshold, iou_threshold=iou_threshold)
     for i in range(config.GRID_SIZE[0]):
 
         if plot_grid: ax.axvline(i * cell_w, linestyle='--', color='k')  # vertical lines
