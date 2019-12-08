@@ -5,7 +5,9 @@ import os
 import numpy as np
 import tensorflow as tf
 
-def plot_grid(data, df_id, prediction, config, plot_ground_truth=True, highlight_fp=False, plot_fn=False, default_color='g', linewidth=3):
+
+def plot_grid(data, df_id, prediction, config, plot_ground_truth=True, highlight_fp=False, plot_fn=False,
+              default_color='g', linewidth=3):
     im = Image.open(os.path.join('data/raw/VOC2012/JPEGImages', data['filename'][df_id]))
 
     plt.imshow(im)
@@ -17,7 +19,6 @@ def plot_grid(data, df_id, prediction, config, plot_ground_truth=True, highlight
 
     cell_w = img_width // config.GRID_SIZE[0]
     cell_h = img_height // config.GRID_SIZE[1]
-
 
     for i in range(config.GRID_SIZE[0]):
 
@@ -45,7 +46,7 @@ def plot_grid(data, df_id, prediction, config, plot_ground_truth=True, highlight
                 ymin = y - height / 2
 
                 rect_true = Rectangle((xmin, ymin), width, height, fill=False,
-                                  linewidth=3, edgecolor='b')
+                                      linewidth=3, edgecolor='b')
                 c = Circle((x, y), radius=5, color='b')
                 ax.add_patch(c)
                 ax.add_patch(rect_true)
@@ -59,8 +60,8 @@ def plot_grid(data, df_id, prediction, config, plot_ground_truth=True, highlight
                 else:
                     color = 'y'  # false negative
                 if (color == 'g') or (color == 'r') or (color == 'y' and plot_fn):
-                    #print(data['grid_output'][df_id][0][i * GRID_SIZE[0] + j])
-                    #print(i, j, boxes_coord, boxes_size, obj, is_obj)
+                    # print(data['grid_output'][df_id][0][i * GRID_SIZE[0] + j])
+                    # print(i, j, boxes_coord, boxes_size, obj, is_obj)
                     width = boxes_size[0]
                     height = boxes_size[1]
 
@@ -74,7 +75,7 @@ def plot_grid(data, df_id, prediction, config, plot_ground_truth=True, highlight
 
                     # print(xmin, ymin, width, height )
                     rect_pred = Rectangle((xmin, ymin), width, height, fill=False, linewidth=linewidth,
-                                     edgecolor=color)
+                                          edgecolor=color)
                     # plt.text(xmin, ymin, str(class_encoder.inverse_transform([np.argmax(cls)])[0]) + '_' + str(
                     #    round(cls[np.argmax(cls)], 2)), bbox=dict(facecolor='red', alpha=0.5))
                     plt.text(x, y + img_height // 16, str(round(obj, 3)), bbox=dict(facecolor=color, alpha=0.5))
@@ -82,7 +83,9 @@ def plot_grid(data, df_id, prediction, config, plot_ground_truth=True, highlight
                     ax.add_patch(c)
                     ax.add_patch(rect_pred)
 
-def plot_grid_nms(data, df_id, prediction, config, plot_ground_truth=True, plot_grid=True, linewidth=3, conf_threshold=0.5, iou_threshold=0.5):
+
+def plot_grid_nms(data, df_id, prediction, config, plot_ground_truth=True, plot_grid=True, linewidth=3,
+                  conf_threshold=0.5, iou_threshold=0.5):
     im = Image.open(os.path.join('data/raw/VOC2012/JPEGImages', data['filename'][df_id]))
 
     plt.imshow(im)
@@ -95,23 +98,23 @@ def plot_grid_nms(data, df_id, prediction, config, plot_ground_truth=True, plot_
     cell_w = img_width // config.GRID_SIZE[0]
     cell_h = img_height // config.GRID_SIZE[1]
 
-
     boxes_coords = np.zeros_like(prediction[..., 0:4])
 
     for i in range(config.GRID_SIZE[0]):
         for j in range(config.GRID_SIZE[1]):
-            pred = prediction[i*config.GRID_SIZE[0] + j]
-            w =  pred[..., 2] * config.GRID_SIZE[0]
-            h = pred[..., 3] * config.GRID_SIZE[1]
+            cell = i * config.GRID_SIZE[0] + j
+            w = prediction[cell][ 2] * config.GRID_SIZE[0]
+            h = prediction[cell][ 3] * config.GRID_SIZE[1]
 
-            #tensorflow NMS uses (y,x) system i*config.GRID_SIZE[0]][
-            boxes_coords[..., 1] = (pred[..., 0] + i) - w/2
-            boxes_coords[..., 0] = (pred[..., 1] + j)  - h/2
-            boxes_coords[..., 3] = boxes_coords[..., 1] + w
-            boxes_coords[..., 2] = boxes_coords[..., 0] + h
+            # tensorflow NMS uses (y,x) system i*config.GRID_SIZE[0]][
+            boxes_coords[cell][1] = (prediction[cell][ 0] + i) - w / 2
+            boxes_coords[cell][0] = (prediction[cell][1] + j) - h / 2
+            boxes_coords[cell][3] = boxes_coords[cell][1] + w
+            boxes_coords[cell][2] = boxes_coords[cell][0] + h
 
-
-    nms_indices = tf.image.non_max_suppression(boxes_coords, prediction[..., 4], max_output_size = config.GRID_SIZE[0]*config.GRID_SIZE[1], score_threshold=conf_threshold, iou_threshold=iou_threshold)
+    nms_indices = tf.image.non_max_suppression(boxes_coords, prediction[..., 4],
+                                               max_output_size=config.GRID_SIZE[0] * config.GRID_SIZE[1],
+                                               score_threshold=conf_threshold, iou_threshold=iou_threshold)
     for i in range(config.GRID_SIZE[0]):
 
         if plot_grid: ax.axvline(i * cell_w, linestyle='--', color='k')  # vertical lines
@@ -138,7 +141,7 @@ def plot_grid_nms(data, df_id, prediction, config, plot_ground_truth=True, plot_
                 ymin = y - height / 2
 
                 rect_true = Rectangle((xmin, ymin), width, height, fill=False,
-                                  linewidth=2, edgecolor='b')
+                                      linewidth=2, edgecolor='b')
                 c = Circle((x, y), radius=3, color='b')
                 ax.add_patch(c)
                 ax.add_patch(rect_true)
@@ -146,7 +149,6 @@ def plot_grid_nms(data, df_id, prediction, config, plot_ground_truth=True, plot_
             if plot_grid: ax.axhline(j * cell_h, linestyle='--', color='k')  # horizontal lines
 
             if (i * config.GRID_SIZE[0] + j) in nms_indices:
-
                 width = boxes_size[0]
                 height = boxes_size[1]
 
@@ -159,7 +161,7 @@ def plot_grid_nms(data, df_id, prediction, config, plot_ground_truth=True, plot_
                 ymin = y - height / 2
                 # print(xmin, ymin, width, height )
                 rect_pred = Rectangle((xmin, ymin), width, height, fill=False, linewidth=linewidth,
-                                 edgecolor='r')
+                                      edgecolor='r')
                 # plt.text(xmin, ymin, str(class_encoder.inverse_transform([np.argmax(cls)])[0]) + '_' + str(
                 #    round(cls[np.argmax(cls)], 2)), bbox=dict(facecolor='red', alpha=0.5))
                 plt.text(xmin, ymin, str(round(obj, 3)), bbox=dict(facecolor='r', alpha=0.5))
