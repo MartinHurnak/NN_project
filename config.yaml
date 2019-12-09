@@ -3,10 +3,11 @@ epochs: 30
 input_size: (256,256)
 conv_base_size: 32
 dense_size: 1024
-yolo_layers: [2, 4, 4, 4]
+yolo_layers: [2, 4, 4, 2]
 batch_normalization: False
 optimizer: 'adam'
-learning_rate: 0.00005
+learning_rate: 0.0001
+scheduler: False
 loss:
   neg_box_coef: 0.07
   size_coef: 5
