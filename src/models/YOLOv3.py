@@ -57,29 +57,28 @@ def create_model(config):
     ]
     model_layers += [YoloLayer(2 * config.CONV_BASE_SIZE, 4 * config.CONV_BASE_SIZE,
                                activation=config.ACTIVATION, batch_normalization=config.BATCH_NORMALIZATION,
-                               regularizer=config.REGULARIZER)] * \
-                    config.YOLO_LAYERS_COUNTS[0]
+                               regularizer=config.REGULARIZER) for _ in range(config.YOLO_LAYERS_COUNTS[0])]
+
     model_layers.append(
         Conv2D(8 * config.CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=config.ACTIVATION,
                kernel_regularizer=config.REGULARIZER, bias_regularizer=config.REGULARIZER))
     model_layers += [YoloLayer(2 * config.CONV_BASE_SIZE, 8 * config.CONV_BASE_SIZE,
                                activation=config.ACTIVATION, batch_normalization=config.BATCH_NORMALIZATION,
-                               regularizer=config.REGULARIZER)] * \
-                    config.YOLO_LAYERS_COUNTS[1]
+                               regularizer=config.REGULARIZER) for _ in range(config.YOLO_LAYERS_COUNTS[1])]
+
     model_layers.append(
         Conv2D(16 * config.CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=config.ACTIVATION,
                kernel_regularizer=config.REGULARIZER, bias_regularizer=config.REGULARIZER))
     model_layers += [YoloLayer(8 * config.CONV_BASE_SIZE, 16 * config.CONV_BASE_SIZE,
                                activation=config.ACTIVATION, batch_normalization=config.BATCH_NORMALIZATION,
-                               regularizer=config.REGULARIZER)] * \
-                    config.YOLO_LAYERS_COUNTS[2]
+                               regularizer=config.REGULARIZER) for _ in range(config.YOLO_LAYERS_COUNTS[2])]
+
     model_layers.append(
         Conv2D(32 * config.CONV_BASE_SIZE, (3, 3), strides=2, padding='same', activation=config.ACTIVATION,
                kernel_regularizer=config.REGULARIZER, bias_regularizer=config.REGULARIZER))
     model_layers += [YoloLayer(16 * config.CONV_BASE_SIZE, 32 * config.CONV_BASE_SIZE,
                                activation=config.ACTIVATION, batch_normalization=config.BATCH_NORMALIZATION,
-                               regularizer=config.REGULARIZER)] * \
-                    config.YOLO_LAYERS_COUNTS[3]
+                               regularizer=config.REGULARIZER) for _ in range(config.YOLO_LAYERS_COUNTS[3])]
 
     x = input
     for layer in model_layers:
