@@ -19,7 +19,7 @@ class Config:
             self.ACTIVATION = keras.layers.LeakyReLU(0.1)
             self.LEARNING_RATE = kwargs['learning_rate'] if 'learning_rate' in kwargs and kwargs['learning_rate'] else cfg['learning_rate']
             self.OPTIMIZER = optimizers[cfg['optimizer']](learning_rate=self.LEARNING_RATE)
-            self.SCHEDULER = cfg['scheduler']
+            self.SCHEDULER = cfg['scheduler'] if 'scheduler' in cfg else None
             self.L1 = kwargs['l1'] if 'l1' in kwargs and kwargs['l1'] else cfg['regularization']['l1']
             self.L2 = kwargs['l2'] if 'l2' in kwargs and kwargs['l2'] else cfg['regularization']['l2']
             self.REGULARIZER = keras.regularizers.l1_l2(l1=self.L1, l2=self.L2)
