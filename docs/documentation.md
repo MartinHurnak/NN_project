@@ -49,6 +49,8 @@ Output of our model consists of outputs for each grid cell. One bounding box is 
 
 ![](images/our_model_h.png)
 
+If you want to observe individual layers, we recommend downloading this image.
+
 #### Loss function
 As loss function, we use sum squared error proposed by [5], where we omit box classification part. Our modified loss function 
 then looks like this:
@@ -103,8 +105,17 @@ F1 = 2 * Precision * Recall / (Precision + Recall)
 ## Results, pros and cons of our model <!--The results of these experiments and their analysis.-->
 Our best model, according to F1 score at validation data, has 52.2% precision and 48.1% recall at testing data, which results in 50.1% F1-score at testing data.
 
-Another model, we consider performing very good achieves 48.1% precision and 48.3 recall at testing data. but we found out, it performs good even on objects that do not have labels in data.
+Another model, we consider performing very good achieves 48.1% precision and 48.3 recall at testing data. but we found out, it performs good even on objects that do not have labels in data (see example with red boxes being our predictions and blue boxes being ground truth).
 
+![](images/missing_labels.png)
+
+Animals (mainly horses as human is often riding them in training data) caused problems to our models, resulting in frequent false positives.
+
+![](images/horse.png)
+
+Although this problem can be solved by extending model by bounding box class predictor (which can predict that this is a horse).
+
+Another weakness of our model are multiple small objects in groups, but YOLO algorithm had problem with those from beginning [5].
 
 ## Future Work
 Obvious continuation of this work can be predicting bounding boxes for multiple classes. We can increase number of predicted bounding boxes per grid cell to make detection of individual objects in large group better.
@@ -112,6 +123,7 @@ Obvious continuation of this work can be predicting bounding boxes for multiple 
 We tuned &lambda;<sub>noobj</sub> coeficient in our experiments, although we only used single constant for whole grid. Another possible expansion is using separate &lambda;<sub>noobj</sub> for each cell to balance various frequency of positions of bounding boxes in individual cells.
 
 Data augmentation can further help increase performance of our model, as we experienced problem with predicting boxes for blurred or grayscale images (however, they are not that frequent in our dataset).
+
 
 ## References
 [1] Girshick, R., Donahue, J., Darrell, T. and Malik, J., 2014. Rich feature hierarchies for accurate object detection and semantic segmentation. In Proceedings of the IEEE conference on computer vision and pattern recognition (pp. 580-587).
