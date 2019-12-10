@@ -39,7 +39,7 @@ http://host.robots.ox.ac.uk/pascal/VOC/voc2012/index.html
 
 
 ## Model
-We have experimented with approach similar to YOLO algorithm, and we have focused on detecting only one specific class of objects. Similar to YOLO algorithm, we have divided images into S x S grid and predicted one bounding box for each grid cell. For feature extraction we have used architecture from YOLOv3 paper [6], but we have experimented with different layer sizes and conv-conv-residual layers count.
+We have experimented with approach similar to YOLO algorithm, and we have focused on detecting only one specific class of objects. Similar to YOLO algorithm, we have divided images into S x S grid and predicted one bounding box for each grid cell. For feature extraction we have used architecture from YOLOv3 paper [6], but we have experimented with different layer sizes and convolutional-convolutional-residual layers count. As activation we have used Leaky ReLU (same as in paper).
 
 ![architerture of YOLOv3 model](images/YOLOv3.jpg "YOLOv3 architeture [6]")
 
@@ -68,12 +68,18 @@ For training of our model, we have decided to focus on detecting people, as this
 We have decided to use VOC2012 dataset, which has 9583 images containing at least one person. This dataset also required slight preprocessing changes to the way bounding box are described. As described in outputs of our model, our model represents bounding boxes by center offset from the top left corner of grid box and by width/height of bounding box, where this dataset had exact xmin, xmax, ymin, ymax coordinates where the bounding box begins and ends.
 
 #### Model configuration
-We have setup a config.yaml file for configuration of our model. Here we can easily adjust batch size, amount of epochs, image input size, convolution base size, dense layer size, size of our four yolo layers, enable/disable batch normalization, change used optimizer, adjust loss coefficient of negative box, position and size and adjust regularization.
-
+We have setup a config.yaml file for configuration of our model. Here we can easily adjust batch size, amount of epochs, image input size, convolution layers size, dense layer size, number of "YOLO" layers (1x1 convolution, 3x3 convolution, residual connection), enable/disable batch normalization, change used optimizer (from SGD and Adam options), set initial learning rate, enable/disable learning rate scheduling, adjust loss coefficient of negative box, position and size and adjust regularization.
 
 ## Experiments <!--Description of the experiments you conducted.-->
-We have experimented with different layer sizes and conv-conv-residual layers count. TODO
-different configurations for yolo layers, 2 4 4 2, 2 2 2 2, 2 8 8 2 TODO
+
+### Hyperparameters
+In our experiments, we have optimized following hyperparameters:
+  - Learning rate - this was probably the most important hyperparameter. Although we used Adam optimizer most of the time, initial learning rate is important as we found that bigger model is highly unstable in first few epochs, resulting in NaN loss if the learning rate is too high. Learning rate needs to be low at the beginning, while we can increase it later during training. For this we used learning rate scheduler. If scheduler is enabled we double the learning rate at the end of 5th, 10th and 15th epochs. If training takes longer than 30 epochs, we reduce learning rate by half at the end of 30th, 35th and 40th epochs as well.
+  - Negative box loss coeficient (&lambda;<sub>noobj</sub>) - as described in Loss part, this coeficient reduces penalization of model for predicting boxes, where they should not be, to prevent situation where model does not predict any boxes, as the gradients from cells that do not contain object can easily overpower gradient from cells that do contain an object. We have tried &lambda;<sub>noobj</sub> from interval <0.03, 0.5>. Best precision-recall ratios are achieved with &lambda;<sub>noobj</sub> somewhere around 0.05
+  - Convolutional layer sizes - we manually adjusted size of first convolutional layer only, sizes of other layers are adjusted automatically according to first layer to preserve ratios from original YOLO v3 extractor. We started with 4 filters at first layer and slowly increased it up to 32 filters at first layer (which results in 1024 filters in last convolutional layer).
+  - Number of "YOLO layers" (one 1x1 convolution, 3x3 convolution, residual connection block). Original YOLO v3 feature extractor uses five layers consisting of [1, 2, 8, 8, 4] block respectively we started at [1, 2, 2, 2, 2] and increased counts later on. At [1, 2, 8, 8, 4] model was highly unstable during first epochs, which we could not solve even by decreasing learning rate. Best results were achieved using [1, 2, 4, 4, 4] model.
+ - Batch normalization - we tried batch normalization as well, although we stopped using it as it caused model to overfit training data heavily while not decreasing validation loss at all.
+ - Regularization - to prevent overfitting we used mainly L2 regularization of weights and biases (although we tried L1L2 regularization as well). L2 regularization in our experiments is usually set between <0.0001, 0.0003> with best results at 0.0002.
 
 #### Logging
 We were logging all input hyperparameters from config file and for validation metrics we were logging loss, precision and recall. All logs were saved in JSON format in log.json file with first pair of information being the `log name : timestamp`. As addition to this, we have aswell used the tensorboard logging function and we have kept the logs under the same name as in log.json.
