@@ -62,7 +62,7 @@ we will experiment with &lambda;<sub>noobj</sub> as it seems to be important hyp
 
 
 ## Training <!--Description of the training routine.-->
-For training of our model, we have decided to focus on detecting people, as this class is most common object in our explored image datasets. For training we have also used the opportunity to work with google cloud compute engine.
+For training of our model, we have decided to focus on detecting people, as this class is most common object in our explored image datasets. For training we have also used the opportunity to work with google cloud compute engine. We split data on train, validation and test (81:9:10). During training we monitor loss and metrics on validation data and use testing data only to evaluate models with best validation metrics.
 
 #### Used dataset and preprocessing
 We have decided to use VOC2012 dataset, which has 9583 images containing at least one person. This dataset also required slight preprocessing changes to the way bounding box are described. As described in outputs of our model, our model represents bounding boxes by center offset from the top left corner of grid box and by width/height of bounding box, where this dataset had exact xmin, xmax, ymin, ymax coordinates where the bounding box begins and ends.
@@ -91,14 +91,20 @@ You can see table of logs here: https://github.com/MartinHurnak/NN_project/blob/
 For evaluation of our experiments we have implemented our own precision and recall metrics with following adjustments:
  - Positive - if prediction has confidence score over 0.5, it is considered positive.
  - True Positive - as true positive, we consider predictions, that have confidence score >0.5 and IOU with any ground truth box >0.5 as well
- - False Negative - we treat ground truth boxes, that do not have any True Positive matched with them (IOU <0.5 with all positive prediction) as false negatives
+ - False Negative - we treat ground truth boxes, that do not have any True Positive matched with them (IOU <0.5 with all positive predictions) as false negatives
 
-With these assumptions, we could implement precision and recall with their regular formulas:
-Precision = True Positives / Positives
+With these assumptions, we could implement precision and recall with their regular formulas:  
+Precision = True Positives / Positives  
 Recall = True Positives / (True Positives + False Negatives)
 
+Then we can calculate F1 score as well:  
+F1 = 2 * Precision * Recall / (Precision + Recall)
+
 ## Results, pros and cons of our model <!--The results of these experiments and their analysis.-->
-TODO
+Our best model, according to F1 score at validation data, has 52.2% precision and 48.1% recall at testing data, which results in 50.1% F1-score at testing data.
+
+Another model, we consider performing very good achieves 48.1% precision and 48.3 recall at testing data. but we found out, it performs good even on objects that do not have labels in data.
+
 
 ## Future Work
 Obvious continuation of this work can be predicting bounding boxes for multiple classes. We can increase number of predicted bounding boxes per grid cell to make detection of individual objects in large group better.
